@@ -1,8 +1,9 @@
 # 🛡️ PhishHunter Live
-### Sistema de Inspección Heurística y Aislamiento Preventivo contra Amenazas de Quishing mediante Visión Computacional
+### Sistema de Inspección Heurística y Aislamiento Preventivo contra Amenazas de Quishing mediante Visión Computacional (React + FastAPI)
 
+[![React](https://img.shields.io/badge/React-19.2-61DAFB.svg?logo=react)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg?logo=python)](https://www.python.org/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B.svg?logo=streamlit)](https://streamlit.io/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-Headless-5C3EE8.svg?logo=opencv)](https://opencv.org/)
 [![License](https://img.shields.io/badge/Security-SOC_Ready-success.svg)]()
 [![Compliance](https://img.shields.io/badge/Compliance-ISO_27001%20%7C%20OWASP%20ASVS%20%7C%20NIST%20%7C%20CIS-blueviolet.svg)]()
@@ -11,30 +12,33 @@
 
 ## 📌 1. Visión General y Arquitectura
 
-**PhishHunter Live** es una plataforma interactiva de ciberdefensa orientada a Centros de Operaciones de Seguridad (SOC), analistas de incidentes y laboratorios forenses. Su objetivo es detectar, mitigar y contener de forma preventiva amenazas de **Quishing** (Phishing vehiculizado mediante códigos QR).
+**PhishHunter Live** es una plataforma de ciberdefensa orientada a Centros de Operaciones de Seguridad (SOC), analistas de incidentes y laboratorios forenses. Su objetivo es detectar, mitigar y contener de forma preventiva amenazas de **Quishing** (Phishing vehiculizado mediante códigos QR).
 
-La solución combina algoritmos de **visión computacional headless (OpenCV)** para la lectura y delimitación de simbologías QR, junto a un **motor analítico de inspección defensiva** que evalúa vectores de ataque en tiempo real y ejecuta un **sandbox pasivo** que neutraliza enlaces maliciosos y desarma el código ejecutable del cliente (JavaScript/XSS), garantizando una contención segura antes de que un usuario o analista caiga en el engaño.
+El sistema cuenta con una arquitectura desacoplada y moderna:
+- **Frontend SOC en React (Vite)**: Interfaz interactiva Glassmorphism con escaneo de cámara web en vivo, subida de archivos, dashboard forense con gráficos analíticos, catálogo normativo y laboratorio de vectores de ataque.
+- **Backend de Alta Velocidad en FastAPI**: Expone endpoints REST para decodificación con **OpenCV Headless**, trazabilidad de redirecciones HTTP salto a salto, auditoría criptográfica TLS, cálculo de Risk Score heurístico y persistencia inmutable en **SQLite**.
 
 ```mermaid
 flowchart TD
-    A["Entrada del Vector: Imagen QR / Cámara Web / URL Manual"] --> B["Decodificador de Visión Computacional (OpenCV Headless)"]
-    B --> C["Trazador de Redirecciones Seguras (OWASP ASVS V5.1)"]
-    C --> D["Motor Heurístico Multicapa & Risk Scoring (0 - 100)"]
+    A["Frontend React: Escaneo Cámara / Archivo QR / Entrada Manual"] -->|REST API / JSON / Multipart| B["FastAPI Backend (api.py)"]
+    B --> C["Decodificador de Visión Computacional (OpenCV Headless)"]
+    B --> D["Trazador de Redirecciones Seguras (OWASP ASVS V5.1)"]
+    B --> E["Motor Heurístico Multicapa & Risk Scoring (0 - 100)"]
     
-    subgraph "Inspección de Controles de Seguridad"
-        D --> D1["Ataques Homógrafos & Punycode (RFC 5890 / T1566.002)"]
-        D --> D2["Typosquatting & Levenshtein (NIST SP 800-63B / T1583.001)"]
-        D --> D3["Auditoría Criptográfica TLS/SSL (ISO 27001 A.8.24 / NIST SP 800-52)"]
-        D --> D4["Inspección Estructural & Control de Puertos (CIS Controls v8 4.1)"]
+    subgraph "Inspección de Controles de Ciberseguridad"
+        E --> E1["Ataques Homógrafos & Punycode (RFC 5890 / T1566.002)"]
+        E --> E2["Typosquatting & Levenshtein (NIST SP 800-63B / T1583.001)"]
+        E --> E3["Auditoría Criptográfica TLS/SSL (ISO 27001 A.8.24 / NIST SP 800-52)"]
+        E --> E4["Inspección Estructural & Control de Puertos (CIS Controls v8 4.1)"]
     end
     
-    D --> E{"Clasificación del Hallazgo"}
-    E -->|"Score < 30 (SEGURO)"| F["Visualización y Acceso Seguro"]
-    E -->|"Score 30-69 (SOSPECHOSO) / >= 70 (CRÍTICO)"| G["Aislamiento Defensivo Activo (ISO 27001 A.8.20)"]
+    E --> F{"Clasificación del Hallazgo"}
+    F -->|"Score < 30 (SEGURO)"| G["Visualización y Acceso Seguro"]
+    F -->|"Score >= 30 (SOSPECHOSO / CRÍTICO)"| H["Aislamiento Defensivo Activo (ISO 27001 A.8.20)"]
     
-    G --> H["Sandbox Pasivo: Desinfección HTML & OpenGraph (CWE-79)"]
-    D --> I["Persistencia y Trazabilidad Forense SQLite (ISO 27001 A.8.15)"]
-    I --> J["SOC Dashboard & Exportación Oficial (CSV / JSON)"]
+    H --> I["Sandbox Pasivo: Desinfección HTML & OpenGraph (CWE-79)"]
+    E --> J["Persistencia y Trazabilidad Forense SQLite (ISO 27001 A.8.15)"]
+    J --> K["SOC Dashboard React: Gráficos Donut, Barras y Exportación CSV/JSON"]
 ```
 
 ---
@@ -57,17 +61,34 @@ PhishHunter Live fue diseñado bajo estrictos criterios de auditoría y controle
 
 ---
 
-## 🗂️ 3. Estructura Modular del Proyecto
+## 🗂️ 3. Estructura del Proyecto
 
 ```
-phishhunter-live/
+phishhunter-live-react/
 ├── .env.example               # Variables de entorno modelo (puertos, timeouts, db)
-├── .gitignore                 # Exclusiones de Git (entornos virtuales, SQLite, logs)
-├── Dockerfile                 # Imagen liviana basada en python:3.11-slim
+├── .gitignore                 # Exclusiones de Git (node_modules, venv, db)
+├── Dockerfile                 # Contenedor multi-stage optimizado (Node + Python 3.11)
 ├── render.yaml                # Infraestructura como código (IaC) para Render
-├── requirements.txt           # Dependencias fijadas (opencv-python-headless, etc.)
-├── README.md                  # Documentación de arquitectura y guías operativas
-├── app.py                     # Interfaz web interactiva SOC en Streamlit
+├── requirements.txt           # Dependencias Python (FastAPI, OpenCV, etc.)
+├── package.json               # Scripts de orquestación NPM y arranque
+├── start.py                   # Lanzador unificado de servidor (React + FastAPI)
+├── api.py                     # API REST FastAPI SOC
+├── frontend/                  # Aplicación Frontend en React + Vite
+│   ├── package.json           # Dependencias React (Lucide icons, Vite)
+│   ├── vite.config.js         # Configuración Vite con proxy a FastAPI
+│   ├── index.html             # Entry point con estilos corporativos SOC
+│   └── src/
+│       ├── main.jsx           # Render React DOM
+│       ├── App.jsx            # Contenedor principal y pestañas
+│       ├── api.js             # Cliente HTTP REST
+│       ├── index.css          # Estilos Glassmorphism y badges de severidad
+│       └── components/
+│           ├── Sidebar.jsx              # Telemetría y alineación normativa
+│           ├── HeaderMetrics.jsx        # KPIs de incidentes y scores
+│           ├── ThreatInspectionTab.jsx  # Escaneo cámara, archivo, trazado y sandbox
+│           ├── ForensicDashboardTab.jsx # Gráficos analíticos y bitácora SQLite
+│           ├── ComplianceCatalogTab.jsx # Fichas de controles de seguridad
+│           └── LabSamplesTab.jsx        # Laboratorio de vectores sintéticos
 ├── database/
 │   ├── __init__.py
 │   └── db_manager.py          # Gestor SQLite thread-safe y exportación CSV/JSON
@@ -82,7 +103,8 @@ phishhunter-live/
 │   └── threat_signatures.py   # Catálogo de marcas protegidas, homógrafos y TLDs
 └── tests/
     ├── __init__.py
-    └── test_heuristics.py     # Suite de 13 pruebas unitarias automatizadas con pytest
+    ├── test_api.py            # Pruebas de integración de la API REST y React
+    └── test_heuristics.py     # Pruebas deterministas de controles heurísticos
 ```
 
 ---
@@ -90,128 +112,88 @@ phishhunter-live/
 ## 🚀 4. Guía de Ejecución Local
 
 ### Prerrequisitos
-- **Python 3.11** instalado en su sistema.
-- Gestor de paquetes `pip` y soporte para entornos virtuales `venv`.
+- **Python 3.11** o superior.
+- **Node.js v18+** y **npm**.
 
-### Paso 1: Clonar o posicionarse en el repositorio
+### Opción 1: Inicio Rápido Unificado (Recomendado)
+Un único comando sirve tanto la API de seguridad como la aplicación React en `http://localhost:8000`:
+
 ```bash
-cd phishhunter-live
+python start.py
 ```
+*(Si es la primera vez que se ejecuta, compilará automáticamente el frontend React).*
 
-### Paso 2: Crear y activar un entorno virtual aislado
-En **Linux / macOS**:
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-```
+### Opción 2: Modo Desarrollo Separado (Hot-Reload)
+Si desea realizar modificaciones en vivo en el código de React o en el Backend:
 
-En **Windows (PowerShell)**:
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+1. **Terminal 1 (Backend FastAPI con recarga en vivo):**
+   ```bash
+   uvicorn api:app --reload --port 8000
+   ```
 
-### Paso 3: Instalar dependencias del proyecto
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### Paso 4: Configurar variables de entorno (Opcional)
-```bash
-cp .env.example .env
-```
-
-### Paso 5: Lanzar la aplicación interactiva Streamlit
-```bash
-streamlit run app.py
-```
-> La interfaz se iniciará automáticamente en su navegador web en `http://localhost:8501`.
+2. **Terminal 2 (Frontend React Vite con Hot-Module-Replacement):**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+   > El servidor de desarrollo de Vite se abrirá en `http://localhost:3000` con proxy automático a la API.
 
 ---
 
-## 🧪 5. Ejecución de Pruebas Unitarias Automatizadas
+## 🧪 5. Pruebas Automatizadas
 
-El proyecto incluye una suite de pruebas con `pytest` que valida matemáticamente y de forma determinista todos los controles heurísticos, la persistencia en SQLite, la desinfección del Sandbox y el decodificador de visión computacional.
+El proyecto incluye 21 pruebas deterministas con `pytest` que validan el motor heurístico, la persistencia en base de datos, el decodificador de visión computacional y los endpoints de la API REST:
 
-Para ejecutar todas las pruebas:
 ```bash
-python -m pytest -v
+pytest -v
 ```
 
 Salida esperada:
 ```text
-tests/test_heuristics.py::test_levenshtein_distance_algorithm PASSED     [  7%]
-tests/test_heuristics.py::test_base_domain_extraction PASSED             [ 15%]
-tests/test_heuristics.py::test_homograph_punycode_detection PASSED       [ 23%]
-tests/test_heuristics.py::test_homograph_cyrillic_lookalike PASSED       [ 30%]
-tests/test_heuristics.py::test_typosquatting_detection PASSED            [ 38%]
-tests/test_heuristics.py::test_combosquatting_brand_embedding PASSED     [ 46%]
-tests/test_heuristics.py::test_legitimate_domain_is_safe PASSED          [ 53%]
-tests/test_heuristics.py::test_structural_direct_public_ip PASSED        [ 61%]
-tests/test_heuristics.py::test_structural_risky_tld_and_keywords PASSED  [ 69%]
-tests/test_heuristics.py::test_anomalous_port_detection PASSED           [ 76%]
-tests/test_heuristics.py::test_qr_generation_and_decoding PASSED         [ 84%]
-tests/test_heuristics.py::test_sandbox_html_sanitization PASSED          [ 92%]
-tests/test_heuristics.py::test_database_persistence_and_metrics PASSED   [100%]
-============================= 13 passed in 1.11s ==============================
+tests/test_api.py::test_api_health PASSED
+tests/test_api.py::test_api_stats PASSED
+tests/test_api.py::test_lab_samples_and_qr_generation PASSED
+tests/test_api.py::test_analyze_endpoint PASSED
+tests/test_api.py::test_audit_logs_and_exports PASSED
+tests/test_api.py::test_react_spa_served PASSED
+tests/test_heuristics.py::test_levenshtein_distance_algorithm PASSED
+...
+============================= 21 passed in ~2s =============================
 ```
 
 ---
 
 ## 🐳 6. Ejecución en Contenedor Docker
 
-El proyecto incluye un `Dockerfile` optimizado y multi-plataforma que utiliza la imagen liviana `python:3.11-slim`:
+El proyecto cuenta con un `Dockerfile` optimizado en dos etapas (multi-stage) que compila el frontend en Node y lo ejecuta en un entorno liviano `python:3.11-slim`:
 
-### Construcción de la imagen:
+### Construcción:
 ```bash
-docker build -t phishhunter-live:latest .
+docker build -t phishhunter-react:latest .
 ```
 
-### Ejecución del contenedor:
+### Ejecución:
 ```bash
-docker run -d -p 8501:8501 --name phishhunter phishhunter-live:latest
+docker run -d -p 8000:8000 --name phishhunter-react phishhunter-react:latest
 ```
-Acceda a la aplicación en `http://localhost:8501`.
+Acceda a la aplicación en `http://localhost:8000`.
 
 ---
 
-## ☁️ 7. Despliegue en Render (Tier Gratuito)
+## ☁️ 7. Despliegue en Render
 
-El repositorio incluye el archivo de infraestructura como código `render.yaml`, facilitando el despliegue directo en el tier gratuito de Render:
-
-### Opción A: Despliegue con Blueprints (Recomendado)
-1. Suba este repositorio a su cuenta de **GitHub** o **GitLab**.
-2. Inicie sesión en [Render.com](https://render.com/).
-3. En el panel principal, haga clic en **New +** y seleccione **Blueprint**.
-4. Conecte su repositorio. Render detectará automáticamente el archivo `render.yaml`.
-5. Haga clic en **Apply**. Render aprovisionará el servicio, instalará las dependencias y enlazará dinámicamente la variable `$PORT`.
-
-### Opción B: Despliegue Manual como Web Service
-1. En Render, cree un **New Web Service**.
-2. Conecte el repositorio del proyecto.
-3. Complete los siguientes parámetros:
-   - **Environment:** `Python 3`
-   - **Region:** `Oregon (US West)` o la más cercana
-   - **Branch:** `main`
-   - **Build Command:** `pip install --upgrade pip && pip install -r requirements.txt`
-   - **Start Command:** `streamlit run app.py --server.port $PORT --server.address 0.0.0.0 --server.enableCORS false --server.enableXsrfProtection false --browser.gatherUsageStats false`
-   - **Instance Type:** `Free`
-4. Añada las variables de entorno en la sección **Environment Variables**:
-   - `PYTHON_VERSION`: `3.11.9`
-   - `DATABASE_PATH`: `database/phishhunter.db`
-   - `HTTP_TIMEOUT`: `4.0`
-5. Haga clic en **Deploy Web Service**.
+El repositorio incluye el archivo `render.yaml` preconfigurado:
+1. Conecte este repositorio en [Render.com](https://render.com/).
+2. Render ejecutará la etapa de build compilando el frontend React con `npm run build` e instalando las librerías de Python.
+3. El comando de inicio `uvicorn api:app --host 0.0.0.0 --port $PORT` levantará la aplicación completa en un único puerto web.
 
 ---
 
 ## 🛡️ 8. Motor de Ponderación de Riesgo (Risk Scoring Engine)
 
-El cálculo del **Risk Score (0 a 100)** es acumulativo y cuantifica el impacto defensivo de cada anomalía detectada:
-
 | Categoría | Rango de Puntuación | Color / Insignia | Acción Defensiva Ejecutada |
 | :--- | :---: | :---: | :--- |
-| **SEGURO** | $0 \le \text{Score} < 30$ | 🟢 Verde | Conexión confiable sin indicadores de compromiso. Se habilita previsualización estándar. |
+| **SEGURO** | $0 \le \text{Score} < 30$ | 🟢 Verde | Conexión confiable sin indicadores de compromiso. Se habilita acceso seguro. |
 | **SOSPECHOSO** | $30 \le \text{Score} < 70$ | 🟡 Amarillo | Anomalías estructurales o de red presentes. Se activa el **Sandbox Pasivo** y se neutralizan enlaces. |
 | **CRÍTICO / QUISHING** | $70 \le \text{Score} \le 100$ | 🔴 Rojo | Confirmación de ataque (homógrafo, typosquatting o suplantación deliberada). **Aislamiento preventivo total**. |
 

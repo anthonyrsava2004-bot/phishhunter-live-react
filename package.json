@@ -1,0 +1,23 @@
+{
+  "name": "phishhunter-live-react",
+  "version": "2.4.0",
+  "description": "Sistema de Inspección Heurística y Aislamiento Preventivo contra Amenazas de Quishing mediante Visión Computacional (React + FastAPI)",
+  "scripts": {
+    "start": "python start.py",
+    "dev:backend": "uvicorn api:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "test": "pytest"
+  },
+  "keywords": [
+    "quishing",
+    "phishing",
+    "soc",
+    "cybersecurity",
+    "react",
+    "fastapi",
+    "opencv"
+  ],
+  "author": "PhishHunter Security Team",
+  "license": "Apache-2.0"
+}
