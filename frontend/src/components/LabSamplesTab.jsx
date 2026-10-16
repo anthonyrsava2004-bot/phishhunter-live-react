@@ -88,7 +88,7 @@ export default function LabSamplesTab({ onSelectSample }) {
         {currentSample && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
             gap: '24px',
             alignItems: 'center'
           }}>
@@ -113,7 +113,9 @@ export default function LabSamplesTab({ onSelectSample }) {
                   alt="QR de Prueba"
                   style={{
                     width: '200px',
-                    height: '200px',
+                    maxWidth: '100%',
+                    height: 'auto',
+                    aspectRatio: '1/1',
                     borderRadius: '8px',
                     border: '1px solid rgba(56, 189, 248, 0.3)',
                     background: '#fff'
@@ -140,10 +142,12 @@ export default function LabSamplesTab({ onSelectSample }) {
                 color: '#38bdf8',
                 fontSize: '0.9rem',
                 wordBreak: 'break-all',
+                overflowWrap: 'anywhere',
                 whiteSpace: 'pre-wrap',
+                maxWidth: '100%',
                 margin: '8px 0 14px 0'
               }}>
-                <code>{currentSample.payload}</code>
+                <code style={{ wordBreak: 'break-all', overflowWrap: 'anywhere' }}>{currentSample.payload}</code>
               </pre>
 
               <p style={{ fontSize: '0.88rem', color: '#cbd5e1', marginBottom: '20px' }}>
