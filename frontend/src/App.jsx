@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Shield, 
   Search, 
-  BarChart2, 
   FileCheck2, 
   FlaskConical, 
   Menu 
@@ -10,13 +9,12 @@ import {
 import Sidebar from './components/Sidebar';
 import HeaderMetrics from './components/HeaderMetrics';
 import ThreatInspectionTab from './components/ThreatInspectionTab';
-import ForensicDashboardTab from './components/ForensicDashboardTab';
 import ComplianceCatalogTab from './components/ComplianceCatalogTab';
 import LabSamplesTab from './components/LabSamplesTab';
 import { fetchHealth, fetchStats } from './api';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('inspect'); // 'inspect' | 'dashboard' | 'compliance' | 'lab'
+  const [activeTab, setActiveTab] = useState('inspect'); // 'inspect' | 'compliance' | 'lab'
   const [telemetry, setTelemetry] = useState(null);
   const [stats, setStats] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -119,8 +117,8 @@ export default function App() {
             width: '100%'
           }}
         >
-          {/* Header & KPI Metrics */}
-          <HeaderMetrics stats={stats} />
+          {/* Header Banner */}
+          <HeaderMetrics />
 
           {/* Tab Navigation Bar */}
           <div style={{
@@ -151,27 +149,6 @@ export default function App() {
               }}
             >
               <Search size={18} /> 🔍 Escanear Enlace / QR
-            </button>
-
-            <button
-              onClick={() => handleTabChange('dashboard')}
-              style={{
-                padding: '12px 18px',
-                background: 'transparent',
-                border: 'none',
-                borderBottom: activeTab === 'dashboard' ? '3px solid #38bdf8' : '3px solid transparent',
-                color: activeTab === 'dashboard' ? '#38bdf8' : '#94a3b8',
-                fontWeight: activeTab === 'dashboard' ? 700 : 500,
-                fontSize: '0.92rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <BarChart2 size={18} /> 📊 Historial y Estadísticas
             </button>
 
             <button
@@ -224,10 +201,6 @@ export default function App() {
                 initialPayload={samplePayload} 
                 onAnalysisComplete={handleAnalysisComplete}
               />
-            )}
-
-            {activeTab === 'dashboard' && (
-              <ForensicDashboardTab refreshTrigger={refreshKey} />
             )}
 
             {activeTab === 'compliance' && (
