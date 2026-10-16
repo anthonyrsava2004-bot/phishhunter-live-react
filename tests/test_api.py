@@ -63,6 +63,12 @@ def test_audit_logs_and_exports():
     assert json_res.status_code == 200
     assert "application/json" in json_res.headers["content-type"]
 
+def test_pdf_download_endpoint():
+    res = client.get("/api/download/ficha-tecnica-pdf")
+    assert res.status_code == 200
+    assert "application/pdf" in res.headers["content-type"]
+    assert len(res.content) > 10000
+
 def test_react_spa_served():
     res = client.get("/")
     assert res.status_code == 200

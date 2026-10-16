@@ -300,6 +300,23 @@ def export_json():
     )
 
 
+@app.get("/api/download/ficha-tecnica-pdf")
+def download_ficha_tecnica_pdf():
+    """Descarga directa del informe técnico y auditoría de arquitectura en PDF."""
+    pdf_path = Path(__file__).parent / "Ficha_Tecnica_PhishHunter_Live.pdf"
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="El archivo PDF no se encuentra disponible.")
+
+    with open(pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="Ficha_Tecnica_PhishHunter_Live.pdf"'},
+    )
+
+
 # ==============================================================================
 # Endpoints de Laboratorio de Amenazas y Generador QR
 # ==============================================================================
