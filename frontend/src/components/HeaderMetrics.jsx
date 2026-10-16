@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, ShieldCheck, AlertTriangle, Layers, Award } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, AlertTriangle, Layers, Award, Shield } from 'lucide-react';
 
 export default function HeaderMetrics({ stats }) {
   const safeStats = stats || {
@@ -10,6 +10,10 @@ export default function HeaderMetrics({ stats }) {
     average_score: 0
   };
 
+  // Convert risk score to reliability score (e.g. 0-100 risk score -> safety level)
+  const avgRisk = safeStats.average_score || 0;
+  const isHealthy = avgRisk < 30;
+
   return (
     <div style={{ marginBottom: '24px' }}>
       {/* Top Banner */}
@@ -17,7 +21,8 @@ export default function HeaderMetrics({ stats }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{
             fontSize: '2.5rem',
-            filter: 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.4))'
+            filter: 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.4))',
+            flexShrink: 0
           }}>
             🛡️
           </div>
@@ -25,17 +30,17 @@ export default function HeaderMetrics({ stats }) {
             <h1 style={{
               color: '#38bdf8',
               margin: 0,
-              fontSize: '1.9rem',
+              fontSize: '1.85rem',
               fontWeight: 800,
               letterSpacing: '-0.02em',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
-              PhishHunter Live: Inspección Heurística y Aislamiento de Quishing
+              PhishHunter: Detector de Phishing y Códigos QR Falsos
             </h1>
             <p style={{ color: '#94a3b8', margin: '6px 0 0 0', fontSize: '0.98rem' }}>
-              Detección de Phishing en Códigos QR respaldada por Visión Computacional, Trazabilidad HTTP, Auditoría Criptográfica TLS y Sandbox Pasivo Desinfectado.
+              Escanea códigos QR o analiza enlaces web al instante para comprobar su autenticidad y navegar de forma segura.
             </p>
           </div>
         </div>
@@ -47,11 +52,11 @@ export default function HeaderMetrics({ stats }) {
         gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '16px'
       }}>
-        {/* Total Inspections */}
+        {/* Total Scanned */}
         <div className="soc-card" style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-              Total Inspecciones
+              Enlaces Escaneados
             </span>
             <Layers size={18} color="#38bdf8" />
           </div>
@@ -59,7 +64,7 @@ export default function HeaderMetrics({ stats }) {
             {safeStats.total_inspections}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-            Eventos registrados
+            Análisis realizados
           </div>
         </div>
 
@@ -67,7 +72,7 @@ export default function HeaderMetrics({ stats }) {
         <div className="soc-card" style={{ padding: '16px 20px', borderLeft: '4px solid #ef4444' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '0.82rem', color: '#f87171', fontWeight: 600, textTransform: 'uppercase' }}>
-              Amenazas Críticas
+              Amenazas Peligrosas
             </span>
             <ShieldAlert size={18} color="#ef4444" />
           </div>
@@ -75,15 +80,15 @@ export default function HeaderMetrics({ stats }) {
             {safeStats.critical_count}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#ef4444', opacity: 0.8, marginTop: '4px' }}>
-            Acción: Bloqueo Defensivo
+            Sitios fraudulentos bloqueados
           </div>
         </div>
 
-        {/* Suspicious Incidents */}
+        {/* Suspicious */}
         <div className="soc-card" style={{ padding: '16px 20px', borderLeft: '4px solid #f59e0b' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '0.82rem', color: '#fbbf24', fontWeight: 600, textTransform: 'uppercase' }}>
-              Sospechosos
+              Sitios Sospechosos
             </span>
             <AlertTriangle size={18} color="#f59e0b" />
           </div>
@@ -91,15 +96,15 @@ export default function HeaderMetrics({ stats }) {
             {safeStats.suspicious_count}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#f59e0b', opacity: 0.8, marginTop: '4px' }}>
-            Acción: Aislamiento Preventivo
+            Con advertencias de seguridad
           </div>
         </div>
 
-        {/* Safe Inspections */}
+        {/* Safe Sites */}
         <div className="soc-card" style={{ padding: '16px 20px', borderLeft: '4px solid #10b981' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '0.82rem', color: '#34d399', fontWeight: 600, textTransform: 'uppercase' }}>
-              Inspecciones Seguras
+              Sitios Seguros
             </span>
             <ShieldCheck size={18} color="#10b981" />
           </div>
@@ -107,7 +112,7 @@ export default function HeaderMetrics({ stats }) {
             {safeStats.safe_count}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#10b981', opacity: 0.8, marginTop: '4px' }}>
-            Sin anomalías de transporte
+            Verificados y auténticos
           </div>
         </div>
 
@@ -115,15 +120,15 @@ export default function HeaderMetrics({ stats }) {
         <div className="soc-card" style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-              Risk Score Promedio
+              Nivel de Riesgo Promedio
             </span>
             <Award size={18} color="#38bdf8" />
           </div>
           <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f8fafc', marginTop: '8px' }}>
             {safeStats.average_score}<span style={{ fontSize: '1rem', color: '#64748b' }}>/100</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
-            Puntuación heurística global
+          <div style={{ fontSize: '0.75rem', color: isHealthy ? '#34d399' : '#f59e0b', marginTop: '4px' }}>
+            {avgRisk === 0 ? 'Sin registros' : (avgRisk < 30 ? 'Índice de riesgo bajo' : (avgRisk < 70 ? 'Índice de riesgo moderado' : 'Índice de riesgo alto'))}
           </div>
         </div>
       </div>

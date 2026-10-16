@@ -77,7 +77,7 @@ export default function App() {
             <Shield size={18} color="#fff" />
           </div>
           <span style={{ fontWeight: 800, fontSize: '0.98rem', color: '#f8fafc', letterSpacing: '-0.01em' }}>
-            PhishHunter <span style={{ color: '#38bdf8' }}>SOC</span>
+            PhishHunter <span style={{ color: '#38bdf8' }}>Seguridad</span>
           </span>
         </div>
 
@@ -93,7 +93,7 @@ export default function App() {
             gap: '6px'
           }}
         >
-          <Menu size={16} /> Ver Telemetría
+          <Menu size={16} /> Estado de Protección
         </button>
       </header>
 
@@ -150,7 +150,7 @@ export default function App() {
                 transition: 'all 0.2s ease'
               }}
             >
-              <Search size={18} /> 🔍 Inspección de Amenazas
+              <Search size={18} /> 🔍 Escanear Enlace / QR
             </button>
 
             <button
@@ -171,7 +171,7 @@ export default function App() {
                 transition: 'all 0.2s ease'
               }}
             >
-              <BarChart2 size={18} /> 📊 SOC Forensic Dashboard & Trazabilidad
+              <BarChart2 size={18} /> 📊 Historial y Estadísticas
             </button>
 
             <button
@@ -192,7 +192,7 @@ export default function App() {
                 transition: 'all 0.2s ease'
               }}
             >
-              <FileCheck2 size={18} /> 🛡️ Catálogo de Controles y Marco Normativo
+              <FileCheck2 size={18} /> 🛡️ Protecciones y Seguridad
             </button>
 
             <button
@@ -213,7 +213,7 @@ export default function App() {
                 transition: 'all 0.2s ease'
               }}
             >
-              <FlaskConical size={18} /> 🧪 Laboratorio de Muestras y Pruebas
+              <FlaskConical size={18} /> 🧪 Ejemplos de Prueba
             </button>
           </div>
 

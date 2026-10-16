@@ -8,7 +8,6 @@ export default function LabSamplesTab({ onSelectSample }) {
   const [currentSample, setCurrentSample] = useState(null);
   const [qrImageData, setQrImageData] = useState(null);
   const [loadingQr, setLoadingQr] = useState(false);
-  const [copiedMsg, setCopiedMsg] = useState(false);
 
   useEffect(() => {
     async function loadSamples() {
@@ -20,7 +19,7 @@ export default function LabSamplesTab({ onSelectSample }) {
           setCurrentSample(list[0]);
         }
       } catch (err) {
-        console.error('Error al cargar muestras del laboratorio:', err);
+        console.error('Error al cargar ejemplos de prueba:', err);
       }
     }
     loadSamples();
@@ -36,7 +35,7 @@ export default function LabSamplesTab({ onSelectSample }) {
           setQrImageData(res.qr_image);
         }
       } catch (err) {
-        console.error('Error al generar QR de muestra:', err);
+        console.error('Error al generar QR de ejemplo:', err);
       } finally {
         setLoadingQr(false);
       }
@@ -63,16 +62,16 @@ export default function LabSamplesTab({ onSelectSample }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
         <h3 style={{ fontSize: '1.25rem', color: '#38bdf8', margin: 0, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <FlaskConical size={22} /> Laboratorio Forense: Generador de Vectores de Quishing
+          <FlaskConical size={22} /> Ejemplos de Prueba y Demostración
         </h3>
         <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '6px 0 0 0' }}>
-          Seleccione un arquetipo de amenaza o vector legítimo para generar su respectivo código QR en memoria y transferirlo al motor de inspección defensiva:
+          Prueba el detector con ejemplos de enlaces reales, sitios legítimos y casos de suplantación para ver cómo actúa el sistema:
         </p>
       </div>
 
       <div className="soc-card">
         <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#f8fafc', display: 'block', marginBottom: '8px' }}>
-          Seleccione un arquetipo de prueba:
+          Selecciona un caso de prueba:
         </label>
         <select
           value={selectedId}
@@ -106,12 +105,12 @@ export default function LabSamplesTab({ onSelectSample }) {
             }}>
               {loadingQr ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8', padding: '60px 0' }}>
-                  <RefreshCw size={24} className="animate-spin" /> Generando QR sintético...
+                  <RefreshCw size={24} className="animate-spin" /> Generando código QR de prueba...
                 </div>
               ) : qrImageData ? (
                 <img
                   src={qrImageData}
-                  alt="QR Sintético"
+                  alt="QR de Prueba"
                   style={{
                     width: '200px',
                     height: '200px',
@@ -121,17 +120,17 @@ export default function LabSamplesTab({ onSelectSample }) {
                   }}
                 />
               ) : (
-                <div style={{ color: '#ef4444' }}>Error al generar QR</div>
+                <div style={{ color: '#ef4444' }}>Error al generar código QR</div>
               )}
               <span style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '10px' }}>
-                Código QR Generado para el Vector
+                Código QR listo para escanear
               </span>
             </div>
 
             {/* Vector Payload & Details Column */}
             <div>
               <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-                Payload del Vector:
+                Dirección Web del Ejemplo:
               </span>
               <pre style={{
                 background: 'rgba(9, 14, 23, 0.95)',
@@ -148,7 +147,7 @@ export default function LabSamplesTab({ onSelectSample }) {
               </pre>
 
               <p style={{ fontSize: '0.88rem', color: '#cbd5e1', marginBottom: '20px' }}>
-                <strong>Explicación Técnica:</strong> {currentSample.description}
+                <strong>¿Qué analiza el sistema en este caso?:</strong> {currentSample.description}
               </p>
 
               <button
@@ -156,7 +155,7 @@ export default function LabSamplesTab({ onSelectSample }) {
                 className="btn-primary"
                 style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
               >
-                <ArrowRight size={18} /> Cargar este Vector en la Pestaña de Inspección
+                <ArrowRight size={18} /> Probar este Ejemplo en el Escáner
               </button>
             </div>
           </div>

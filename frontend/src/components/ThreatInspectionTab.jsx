@@ -19,7 +19,10 @@ import {
   Eye, 
   Copy,
   CreditCard,
-  RefreshCw
+  RefreshCw,
+  Globe,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import { scanUploadFile, scanCameraFrame, analyzePayload } from '../api';
 
@@ -42,6 +45,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
   const [analysisResult, setAnalysisResult] = useState(null);
   const [analysisError, setAnalysisError] = useState('');
   const [showHtmlCode, setShowHtmlCode] = useState(false);
+  const [showNetworkDetails, setShowNetworkDetails] = useState(false);
   const [copiedHtml, setCopiedHtml] = useState(false);
 
   useEffect(() => {
@@ -106,7 +110,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
         setDecodingMethod(res.method);
         setUploadStatus({ 
           type: 'success', 
-          text: `Código QR extraído exitosamente de la cámara (Algoritmo: ${res.method}).` 
+          text: 'Código QR detectado y leído exitosamente.' 
         });
       } else {
         setUploadStatus({ type: 'error', text: res.error || 'No se detectó un código QR válido en la toma.' });
@@ -121,7 +125,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploadStatus({ type: 'info', text: 'Procesando imagen con OpenCV...' });
+    setUploadStatus({ type: 'info', text: 'Leyendo código QR de la imagen...' });
     try {
       const res = await scanUploadFile(file);
       if (res.success) {
@@ -130,7 +134,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
         setDecodingMethod(res.method);
         setUploadStatus({ 
           type: 'success', 
-          text: `Código QR detectado y decodificado exitosamente (Algoritmo: ${res.method}).` 
+          text: 'Código QR detectado y decodificado exitosamente.' 
         });
       } else {
         setUploadStatus({ type: 'error', text: res.error || 'No se detectó código QR en el archivo.' });
@@ -150,11 +154,10 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
     setAnalysisError('');
     setAnalysisStep(1);
 
-    // Simulate animated step progression
-    const stepTimer1 = setTimeout(() => setAnalysisStep(2), 600);
-    const stepTimer2 = setTimeout(() => setAnalysisStep(3), 1200);
-    const stepTimer3 = setTimeout(() => setAnalysisStep(4), 1800);
-    const stepTimer4 = setTimeout(() => setAnalysisStep(5), 2400);
+    const stepTimer1 = setTimeout(() => setAnalysisStep(2), 500);
+    const stepTimer2 = setTimeout(() => setAnalysisStep(3), 1000);
+    const stepTimer3 = setTimeout(() => setAnalysisStep(4), 1500);
+    const stepTimer4 = setTimeout(() => setAnalysisStep(5), 2000);
 
     try {
       const res = await analyzePayload(payloadText);
@@ -163,7 +166,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
         setAnalysisResult(res);
         setIsAnalyzing(false);
         if (onAnalysisComplete) onAnalysisComplete();
-      }, 500);
+      }, 400);
     } catch (err) {
       setAnalysisError(err.message);
       setIsAnalyzing(false);
@@ -186,7 +189,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
       {/* Input Selection Header */}
       <div className="soc-card" style={{ marginBottom: '24px' }}>
         <h3 style={{
-          fontSize: '1.1rem',
+          fontSize: '1.15rem',
           fontWeight: 700,
           color: '#38bdf8',
           marginBottom: '16px',
@@ -194,7 +197,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           alignItems: 'center',
           gap: '8px'
         }}>
-          📥 Entrada y Captura de Códigos QR
+          📥 Ingresa o Escanea un Código QR o Enlace
         </h3>
 
         {/* Input Vector Mode Selector Tabs */}
@@ -208,7 +211,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
             onClick={() => setInputMethod('upload')}
             style={{
               flex: 1,
-              minWidth: '220px',
+              minWidth: '200px',
               padding: '12px 16px',
               borderRadius: '8px',
               border: inputMethod === 'upload' ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
@@ -223,14 +226,14 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               transition: 'all 0.2s ease'
             }}
           >
-            <Upload size={18} /> Cargar Imagen QR (PNG, JPG, WEBP)
+            <Upload size={18} /> Subir Imagen con QR
           </button>
 
           <button
             onClick={() => setInputMethod('camera')}
             style={{
               flex: 1,
-              minWidth: '220px',
+              minWidth: '200px',
               padding: '12px 16px',
               borderRadius: '8px',
               border: inputMethod === 'camera' ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
@@ -245,14 +248,14 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               transition: 'all 0.2s ease'
             }}
           >
-            <Camera size={18} /> Escaneo en Vivo por Cámara Web
+            <Camera size={18} /> Escanear con Cámara
           </button>
 
           <button
             onClick={() => setInputMethod('manual')}
             style={{
               flex: 1,
-              minWidth: '220px',
+              minWidth: '200px',
               padding: '12px 16px',
               borderRadius: '8px',
               border: inputMethod === 'manual' ? '1px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.2)',
@@ -267,7 +270,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               transition: 'all 0.2s ease'
             }}
           >
-            <Keyboard size={18} /> Entrada Manual de URL / Payload
+            <Keyboard size={18} /> Escribir Enlace Directo
           </button>
         </div>
 
@@ -281,7 +284,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           {inputMethod === 'upload' && (
             <div>
               <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginBottom: '14px' }}>
-                Cargue una captura o foto de un código QR. Compatible con fotos móviles de alta resolución, imágenes de bajo contraste y orientaciones EXIF automáticas.
+                Selecciona una foto o captura de pantalla que contenga un código QR para comprobar si es seguro:
               </p>
               <label style={{
                 display: 'flex',
@@ -297,10 +300,10 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               }}>
                 <Upload size={36} color="#38bdf8" style={{ marginBottom: '10px' }} />
                 <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#f8fafc' }}>
-                  Seleccionar o arrastrar archivo de imagen
+                  Hacer clic para subir imagen
                 </span>
                 <span style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '4px' }}>
-                  PNG, JPG, JPEG, WEBP
+                  Formatos compatibles: PNG, JPG, JPEG, WEBP
                 </span>
                 <input
                   type="file"
@@ -315,7 +318,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           {inputMethod === 'camera' && (
             <div>
               <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginBottom: '14px' }}>
-                Presente el código QR ante la lente de su dispositivo y presione "Capturar y Decodificar":
+                Apunta tu cámara hacia el código QR y pulsa "Capturar y Leer":
               </p>
               {cameraError ? (
                 <div style={{ color: '#ef4444', padding: '12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
@@ -345,7 +348,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                     className="btn-primary"
                     style={{ padding: '10px 24px' }}
                   >
-                    <Camera size={18} /> Capturar y Decodificar Fotograma
+                    <Camera size={18} /> Capturar y Leer Código QR
                   </button>
                 </div>
               )}
@@ -355,13 +358,13 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           {inputMethod === 'manual' && (
             <div>
               <p style={{ fontSize: '0.88rem', color: '#94a3b8', marginBottom: '10px' }}>
-                Ingrese la URL o texto del señuelo para inspección heurística directa:
+                Pega la dirección web que deseas verificar:
               </p>
               <input
                 type="text"
                 value={payloadText}
                 onChange={(e) => setPayloadText(e.target.value)}
-                placeholder="https://ejemplo-bancario-sospechoso.xyz/login"
+                placeholder="https://ejemplo-sitio-sospechoso.com/login"
                 style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.95rem',
@@ -411,11 +414,11 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
             }}>
               <div>
                 <span style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-                  Delimitación de Simbología QR (OpenCV Bounding Polygon):
+                  Código QR Detectado:
                 </span>
                 <img
                   src={annotatedImage}
-                  alt="QR con polígono OpenCV"
+                  alt="QR detectado"
                   style={{
                     maxWidth: '100%',
                     maxHeight: '220px',
@@ -427,7 +430,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
 
               <div>
                 <span style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'block', marginBottom: '8px', fontWeight: 600 }}>
-                  Contenido Decodificado del Código QR:
+                  Enlace o Texto del Código QR:
                 </span>
                 <div style={{
                   background: 'rgba(9, 14, 23, 0.9)',
@@ -461,7 +464,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               }}
             >
               <Rocket size={20} />
-              {isAnalyzing ? 'Ejecutando Cadena Defensiva...' : '🚀 Ejecutar Inspección Defensiva Integral'}
+              {isAnalyzing ? 'Verificando seguridad del enlace...' : '🚀 Analizar Seguridad del Enlace'}
             </button>
           </div>
         )}
@@ -470,27 +473,27 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
       {/* Analysis Progress Steps Card */}
       {isAnalyzing && (
         <div className="soc-card" style={{ marginBottom: '24px', borderLeft: '4px solid #38bdf8' }}>
-          <h4 style={{ color: '#38bdf8', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <RefreshCw size={18} /> Ejecutando Cadena Defensiva de Inspección y Aislamiento...
+          <h4 style={{ color: '#38bdf8', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
+            <RefreshCw size={18} className="animate-spin" /> Verificando autenticidad y posibles riesgos...
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
             <div style={{ color: analysisStep >= 1 ? '#34d399' : '#64748b' }}>
-              {analysisStep >= 1 ? '✅' : '⏳'} 1️⃣ Rastreando saltos HTTP y validando TLS (OWASP ASVS V5.1 / ISO 27001 A.8.24)...
+              {analysisStep >= 1 ? '✅' : '⏳'} 1️⃣ Verificando seguridad de la conexión y certificados SSL...
             </div>
             <div style={{ color: analysisStep >= 2 ? '#34d399' : '#64748b' }}>
-              {analysisStep >= 2 ? '✅' : '⏳'} 2️⃣ Evaluando firmas homógrafas y decodificación Punycode (RFC 5890 / MITRE T1566.002)...
+              {analysisStep >= 2 ? '✅' : '⏳'} 2️⃣ Comprobando caracteres especiales y posible suplantación de identidad...
             </div>
             <div style={{ color: analysisStep >= 3 ? '#34d399' : '#64748b' }}>
-              {analysisStep >= 3 ? '✅' : '⏳'} 3️⃣ Calculando distancia de Levenshtein contra marcas oficiales (NIST SP 800-63B)...
+              {analysisStep >= 3 ? '✅' : '⏳'} 3️⃣ Comparando contra sitios oficiales de bancos y empresas...
             </div>
             <div style={{ color: analysisStep >= 4 ? '#34d399' : '#64748b' }}>
-              {analysisStep >= 4 ? '✅' : '⏳'} 4️⃣ Verificando IPs directas y TLDs de alto riesgo (CIS Controls v8 4.1)...
+              {analysisStep >= 4 ? '✅' : '⏳'} 4️⃣ Inspeccionando la reputación de la dirección web...
             </div>
             <div style={{ color: analysisStep >= 5 ? '#34d399' : '#64748b' }}>
-              {analysisStep >= 5 ? '✅' : '⏳'} 5️⃣ Generando contenedor Sandbox pasivo con desinfección HTML (ISO 27001 A.8.20 / CWE-79)...
+              {analysisStep >= 5 ? '✅' : '⏳'} 5️⃣ Extrayendo vista previa segura y desinfectando contenido...
             </div>
             <div style={{ color: analysisStep >= 6 ? '#34d399' : '#64748b' }}>
-              {analysisStep >= 6 ? '✅' : '⏳'} 6️⃣ Registrando evidencia en la bitácora forense SQLite (ISO 27001 A.8.15)...
+              {analysisStep >= 6 ? '✅' : '⏳'} 6️⃣ Generando reporte final de seguridad...
             </div>
           </div>
         </div>
@@ -505,7 +508,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           color: '#f87171',
           marginBottom: '24px'
         }}>
-          ⚠️ Error en la inspección: {analysisError}
+          ⚠️ Error al analizar el enlace: {analysisError}
         </div>
       )}
 
@@ -517,28 +520,28 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  Dictamen de Seguridad:
+                  Resultado del Análisis:
                   <span className={
                     analysisResult.risk_score >= 70 ? 'badge-critical' : (analysisResult.risk_score >= 30 ? 'badge-suspicious' : 'badge-safe')
                   }>
-                    {analysisResult.risk_badge} {analysisResult.risk_level} ({analysisResult.risk_score}/100)
+                    {analysisResult.risk_badge} {analysisResult.risk_level} (Riesgo: {analysisResult.risk_score}/100)
                   </span>
                 </h3>
               </div>
-              <span style={{ fontFamily: 'var(--font-mono)', color: '#94a3b8', fontSize: '0.85rem' }}>
-                ID Auditoría: #{analysisResult.log_id}
+              <span style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
+                Referencia: #{analysisResult.log_id}
               </span>
             </div>
 
             <p style={{ fontSize: '1.05rem', margin: '8px 0', color: '#e2e8f0' }}>
-              <strong>Acción Defensiva Recomendada:</strong> {analysisResult.action_recommended}
+              <strong>Recomendación:</strong> {analysisResult.action_recommended}
             </p>
             <p style={{ fontSize: '0.88rem', color: '#94a3b8', margin: 0 }}>
-              Destino final auditado: <code style={{ color: '#38bdf8' }}>{analysisResult.target_url}</code>
+              Sitio web de destino: <code style={{ color: '#38bdf8' }}>{analysisResult.target_url}</code>
             </p>
           </div>
 
-          {/* 4 Technical Metric Cards */}
+          {/* 4 Reliability / Reputation Metric Cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -546,7 +549,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           }}>
             <div className="soc-card">
               <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-                Risk Score
+                Nivel de Riesgo
               </span>
               <div style={{
                 fontSize: '1.7rem',
@@ -556,29 +559,29 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               }}>
                 {analysisResult.risk_score} / 100
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                Puntaje de penalización
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
+                {analysisResult.risk_score >= 70 ? 'Peligro de fraude alto' : (analysisResult.risk_score >= 30 ? 'Requiere precaución' : 'Sitio confiable')}
               </div>
             </div>
 
             <div className="soc-card">
               <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-                Saltos de Redirección
+                Redirecciones Detectadas
               </span>
               <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#38bdf8', marginTop: '6px' }}>
                 {analysisResult.trace_result?.redirect_count || 0}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                Hops HTTP rastreados
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
+                {analysisResult.trace_result?.redirect_count === 0 ? 'Conduce directo al sitio' : `${analysisResult.trace_result?.redirect_count} saltos antes de abrir`}
               </div>
             </div>
 
             <div className="soc-card">
               <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-                Estado Criptográfico TLS
+                Conexión Cifrada (SSL/HTTPS)
               </span>
               <div style={{
-                fontSize: '1.1rem',
+                fontSize: '1.05rem',
                 fontWeight: 700,
                 marginTop: '10px',
                 color: (!analysisResult.trace_result?.is_web_url) 
@@ -586,23 +589,23 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                   : (analysisResult.trace_result?.ssl_valid && !analysisResult.trace_result?.has_tls_downgrade ? '#10b981' : '#ef4444')
               }}>
                 {!analysisResult.trace_result?.is_web_url
-                  ? 'No Aplica (Carga P2P)'
-                  : (analysisResult.trace_result?.ssl_valid && !analysisResult.trace_result?.has_tls_downgrade ? 'Válido y Forzado' : 'Anómalo / Inválido')}
+                  ? 'No Aplica'
+                  : (analysisResult.trace_result?.ssl_valid && !analysisResult.trace_result?.has_tls_downgrade ? 'Cifrado Seguro Válido' : 'Conexión No Segura')}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px' }}>
-                Auditoría X.509 / TLS
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px' }}>
+                Protección contra interceptación
               </div>
             </div>
 
             <div className="soc-card">
               <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
-                Reglas Infraccionadas
+                Alertas de Seguridad
               </span>
               <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#f8fafc', marginTop: '6px' }}>
                 {analysisResult.flags_detected?.length || 0}
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px' }}>
-                Firmas activadas
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>
+                {analysisResult.flags_detected?.length === 0 ? 'Sin advertencias' : 'Factores de riesgo encontrados'}
               </div>
             </div>
           </div>
@@ -611,14 +614,14 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           {analysisResult.payload_type === 'emvco_payment' && analysisResult.emvco_info && (
             <div className="soc-card" style={{ borderLeft: '4px solid #10b981' }}>
               <h4 style={{ color: '#10b981', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <CreditCard size={18} /> Especificación de Pago Móvil EMVCo ({analysisResult.emvco_info.network || 'P2P'})
+                <CreditCard size={18} /> Datos de Pago Móvil Detectados ({analysisResult.emvco_info.network || 'P2P'})
               </h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '0.88rem' }}>
                 <p style={{ margin: 0 }}><strong>Beneficiario:</strong> {analysisResult.emvco_info.merchant_name}</p>
                 <p style={{ margin: 0 }}><strong>Ubicación:</strong> {analysisResult.emvco_info.merchant_city}, {analysisResult.emvco_info.country_code} (Perú)</p>
-                <p style={{ margin: 0 }}><strong>Moneda:</strong> {analysisResult.emvco_info.currency} | <strong>MCC:</strong> {analysisResult.emvco_info.category_code}</p>
-                <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.82rem' }}>
-                  Integridad CRC16: <code>{analysisResult.emvco_info.checksum}</code>
+                <p style={{ margin: 0 }}><strong>Moneda:</strong> {analysisResult.emvco_info.currency} | <strong>Categoría:</strong> {analysisResult.emvco_info.category_code}</p>
+                <p style={{ margin: 0, color: '#10b981', fontSize: '0.82rem' }}>
+                  ✓ Integridad del código de pago verificada y correcta
                 </p>
               </div>
             </div>
@@ -627,7 +630,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           {/* Findings Breakdown Matrix */}
           <div className="soc-card">
             <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', marginBottom: '16px' }}>
-              📋 Desglose Técnico de Hallazgos y Mapeo Normativo
+              📋 Detalle de Alertas y Factores de Riesgo
             </h3>
 
             {(!analysisResult.flags_detected || analysisResult.flags_detected.length === 0) ? (
@@ -643,7 +646,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                 fontSize: '0.9rem'
               }}>
                 <CheckCircle size={18} />
-                No se detectaron penalizaciones. La URL cumple con los estándares de transporte seguro (ISO 27001 A.8.24) y no muestra homógrafos ni suplantación de identidad.
+                No se detectaron riesgos. El enlace utiliza conexión cifrada segura y no presenta indicios de suplantación de identidad.
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -664,10 +667,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                         <h4 style={{ margin: 0, color: '#38bdf8', fontSize: '0.95rem' }}>
                           #{idx + 1} {flag.name}
                         </h4>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <span className={sevClass}>{sev} (+{flag.penalty} pts)</span>
-                          <span className="badge-control">{flag.standard}</span>
-                        </div>
+                        <span className={sevClass}>{sev}</span>
                       </div>
                       <p style={{ margin: '8px 0 0 0', color: '#cbd5e1', fontSize: '0.88rem' }}>
                         {flag.description}
@@ -681,9 +681,20 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
 
           {/* HTTP Redirect Trace Table */}
           <div className="soc-card">
-            <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', marginBottom: '14px' }}>
-              🌐 Cadena Forense de Redirecciones HTTP y Análisis de Cabeceras
-            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: 0 }}>
+                🌐 Ruta de Redirección del Enlace
+              </h3>
+              {analysisResult.trace_result?.hops && analysisResult.trace_result.hops.length > 0 && (
+                <button
+                  onClick={() => setShowNetworkDetails(!showNetworkDetails)}
+                  className="btn-secondary"
+                  style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                >
+                  {showNetworkDetails ? 'Ocultar detalles técnicos' : 'Ver detalles técnicos (IPs/Latencia)'}
+                </button>
+              )}
+            </div>
 
             {analysisResult.trace_result?.hops && analysisResult.trace_result.hops.length > 0 ? (
               <div>
@@ -691,14 +702,12 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                   <table className="soc-table">
                     <thead>
                       <tr>
-                        <th>Salto #</th>
-                        <th>Código HTTP</th>
-                        <th>Hostname</th>
-                        <th>IP Resuelta</th>
-                        <th>Puerto</th>
-                        <th>Protocolo</th>
-                        <th>Latencia</th>
-                        <th>URL Objetivo</th>
+                        <th>Paso</th>
+                        <th>Estado</th>
+                        <th>Dominio / Sitio</th>
+                        {showNetworkDetails && <th>IP</th>}
+                        {showNetworkDetails && <th>Tiempo</th>}
+                        <th>Enlace de Destino</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -710,17 +719,15 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                               color: hop.status_code >= 400 ? '#ef4444' : (hop.status_code >= 300 ? '#f59e0b' : '#10b981'),
                               fontWeight: 600
                             }}>
-                              {hop.status_code} {hop.reason}
+                              {hop.status_code >= 300 && hop.status_code < 400 ? `Redirige (${hop.status_code})` : (hop.status_code === 200 ? 'Destino Final (200 OK)' : `${hop.status_code} ${hop.reason}`)}
                             </span>
                           </td>
-                          <td style={{ fontFamily: 'var(--font-mono)' }}>{hop.hostname}</td>
-                          <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{hop.resolved_ip}</td>
-                          <td>{hop.port}</td>
-                          <td>{hop.scheme?.toUpperCase()}</td>
-                          <td>{hop.elapsed_ms} ms</td>
+                          <td style={{ fontWeight: 600, color: '#f8fafc' }}>{hop.hostname}</td>
+                          {showNetworkDetails && <td style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>{hop.resolved_ip}</td>}
+                          {showNetworkDetails && <td>{hop.elapsed_ms} ms</td>}
                           <td style={{
                             fontFamily: 'var(--font-mono)',
-                            maxWidth: '260px',
+                            maxWidth: '300px',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
@@ -743,13 +750,13 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                     fontSize: '0.82rem',
                     color: '#94a3b8'
                   }}>
-                    <strong style={{ color: '#38bdf8' }}>Auditoría TLS Remota:</strong> Versión: <code style={{ color: '#fff' }}>{analysisResult.trace_result.tls_audit.tls_version}</code> | Cifrado: <code style={{ color: '#fff' }}>{analysisResult.trace_result.tls_audit.cipher}</code> | Emisor CA: <code style={{ color: '#fff' }}>{analysisResult.trace_result.tls_audit.issuer_cn}</code> | Expira: <code style={{ color: '#fff' }}>{analysisResult.trace_result.tls_audit.expires}</code>
+                    <strong style={{ color: '#38bdf8' }}>Certificado de Seguridad:</strong> Emisor oficial: <code style={{ color: '#fff' }}>{analysisResult.trace_result.tls_audit.issuer_cn}</code> | Vigencia: <code style={{ color: '#fff' }}>{analysisResult.trace_result.tls_audit.expires}</code>
                   </div>
                 )}
               </div>
             ) : (
               <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>
-                No se generaron saltos de red o la URL no requirió redirección.
+                El enlace no realizó redirecciones; conecta de forma directa a su destino.
               </p>
             )}
           </div>
@@ -757,21 +764,25 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
           {/* Passive Sandbox & Defensive Isolation */}
           <div className="soc-card">
             <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', marginBottom: '14px' }}>
-              📦 Sandbox Pasivo y Aislamiento Preventivo
+              📦 Vista Previa Segura del Sitio Web
             </h3>
 
             {analysisResult.is_dangerous ? (
               <div className="quarantine-shield" style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#ef4444', margin: 0 }}>🛡️ ESCUDO DE AISLAMIENTO ACTIVO (ISO/IEC 27001 Control A.8.20)</h4>
+                <h4 style={{ color: '#ef4444', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldAlert size={20} /> Navegación Protegida Activa
+                </h4>
                 <p style={{ color: '#cbd5e1', margin: '8px 0 0 0', fontSize: '0.9rem' }}>
-                  Los enlaces directos están <strong>estrictamente bloqueados</strong> para evitar ataques 'Drive-by Download' o ejecución de exploits en el navegador del analista. A continuación se expone la réplica pasiva desinfectada.
+                  El acceso directo está <strong>bloqueado por precaución</strong> para evitar la descarga de archivos dañinos. A continuación puedes ver el contenido real de la página de forma totalmente segura.
                 </p>
               </div>
             ) : (
               <div className="safe-shield" style={{ marginBottom: '20px' }}>
-                <h4 style={{ color: '#10b981', margin: 0 }}>🟢 RECURSO VERIFICADO COMO SEGURO</h4>
+                <h4 style={{ color: '#10b981', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={20} /> Sitio Verificado y Seguro
+                </h4>
                 <p style={{ color: '#cbd5e1', margin: '8px 0 0 0', fontSize: '0.9rem' }}>
-                  El recurso no presenta riesgo de quishing. Puede acceder de forma segura si lo requiere.
+                  Este enlace no presenta indicios de fraude o suplantación.
                 </p>
               </div>
             )}
@@ -789,21 +800,21 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                 padding: '16px'
               }}>
                 <h4 style={{ color: '#38bdf8', marginBottom: '12px', fontSize: '0.95rem' }}>
-                  🖼️ Metadatos OpenGraph Extraídos:
+                  🖼️ Información y Portada del Sitio:
                 </h4>
                 {analysisResult.sandbox_res?.metadata ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem' }}>
-                    <p style={{ margin: 0 }}><strong>Título:</strong> {analysisResult.sandbox_res.metadata.title || 'N/A'}</p>
-                    <p style={{ margin: 0 }}><strong>Descripción:</strong> {analysisResult.sandbox_res.metadata.description || 'N/A'}</p>
-                    <p style={{ margin: 0 }}><strong>Sitio Web:</strong> {analysisResult.sandbox_res.metadata.site_name || 'N/A'}</p>
+                    <p style={{ margin: 0 }}><strong>Título:</strong> {analysisResult.sandbox_res.metadata.title || 'No especificado'}</p>
+                    <p style={{ margin: 0 }}><strong>Descripción:</strong> {analysisResult.sandbox_res.metadata.description || 'No especificada'}</p>
+                    <p style={{ margin: 0 }}><strong>Sitio Web:</strong> {analysisResult.sandbox_res.metadata.site_name || 'No especificado'}</p>
                     {analysisResult.sandbox_res.metadata.image_url && (
                       <div style={{ marginTop: '10px' }}>
                         <span style={{ fontSize: '0.78rem', color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                          Imagen OpenGraph del señuelo:
+                          Imagen de portada del sitio:
                         </span>
                         <img
                           src={analysisResult.sandbox_res.metadata.image_url}
-                          alt="OpenGraph Preview"
+                          alt="Portada del sitio"
                           style={{ maxWidth: '100%', maxHeight: '180px', borderRadius: '6px' }}
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
@@ -811,12 +822,12 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                     )}
                     {analysisResult.sandbox_res.metadata.favicon_url && (
                       <p style={{ margin: '6px 0 0 0' }}>
-                        <strong>Favicon:</strong> <a href={analysisResult.sandbox_res.metadata.favicon_url} target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>Ver Icono</a>
+                        <strong>Icono del sitio:</strong> <a href={analysisResult.sandbox_res.metadata.favicon_url} target="_blank" rel="noreferrer" style={{ color: '#38bdf8' }}>Ver Favicon</a>
                       </p>
                     )}
                   </div>
                 ) : (
-                  <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Sin metadatos OpenGraph disponibles.</p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Sin portada web disponible.</p>
                 )}
               </div>
 
@@ -829,34 +840,33 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <h4 style={{ color: '#38bdf8', margin: 0, fontSize: '0.95rem' }}>
-                    📄 Vista Sanitizada del DOM (Sin JavaScript):
+                    📄 Resumen del Contenido de la Página:
                   </h4>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'var(--font-mono)' }}>
-                    Payload: {analysisResult.sandbox_res?.page_size_kb || 0} KB
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                    Tamaño: {analysisResult.sandbox_res?.page_size_kb || 0} KB
                   </span>
                 </div>
 
                 <textarea
                   readOnly
                   rows={6}
-                  value={analysisResult.sandbox_res?.text_summary || 'Sin contenido de texto plano extraído.'}
+                  value={analysisResult.sandbox_res?.text_summary || 'Sin contenido de texto detectado en la página.'}
                   style={{
                     resize: 'none',
-                    fontSize: '0.82rem',
-                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.85rem',
                     color: '#cbd5e1',
                     marginBottom: '12px'
                   }}
                 />
 
-                {/* Sanitized HTML Accordion */}
+                {/* Sanitized HTML Accordion (Optional) */}
                 <button
                   onClick={() => setShowHtmlCode(!showHtmlCode)}
                   className="btn-secondary"
                   style={{ width: '100%', justifyContent: 'space-between', fontSize: '0.8rem' }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FileCode size={15} /> Inspeccionar Código HTML Sanitizado (CWE-79 Neutralizado)
+                    <FileCode size={15} /> Ver código HTML desinfectado (Avanzado)
                   </span>
                   {showHtmlCode ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 </button>

@@ -29,7 +29,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
       setStatsData(statsRes);
       setLogs(logsRes);
     } catch (err) {
-      console.error('Error al cargar datos forenses:', err);
+      console.error('Error al cargar datos del historial:', err);
     } finally {
       setLoading(false);
     }
@@ -65,21 +65,21 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Title */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h3 style={{ fontSize: '1.2rem', color: '#38bdf8', margin: 0, fontWeight: 700 }}>
-            📊 Trazabilidad Forense e Incidentes Detectados (ISO/IEC 27001 A.8.15)
+          <h3 style={{ fontSize: '1.25rem', color: '#38bdf8', margin: 0, fontWeight: 700 }}>
+            📊 Historial de Análisis y Estadísticas de Seguridad
           </h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '4px 0 0 0' }}>
-            Registro cronológico inmutable y distribución estadística de eventos de Quishing
+          <p style={{ color: '#94a3b8', fontSize: '0.88rem', margin: '4px 0 0 0' }}>
+            Registro cronológico de enlaces escaneados y resumen de confiabilidad
           </p>
         </div>
         <button 
           onClick={loadDashboardData} 
           className="btn-secondary"
-          style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+          style={{ fontSize: '0.82rem', padding: '7px 14px' }}
         >
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Actualizar Telemetría
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Actualizar Datos
         </button>
       </div>
 
@@ -99,15 +99,15 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
             alignItems: 'center',
             gap: '8px'
           }}>
-            <PieChart size={18} /> Distribución de Incidentes por Nivel de Riesgo
+            <PieChart size={18} /> Clasificación de Enlaces Analizados
           </h4>
 
           {total === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: '0.9rem' }}>
-              Sin registros suficientes para graficar.
+              Sin análisis registrados todavía.
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '20px', flexWrap: 'wrap' }}>
               {/* Circular SVG Donut */}
               <div style={{ position: 'relative', width: '140px', height: '140px' }}>
                 <svg width="140" height="140" viewBox="0 0 140 140" style={{ transform: 'rotate(-90deg)' }}>
@@ -173,7 +173,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
                   justifyContent: 'center'
                 }}>
                   <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f8fafc' }}>{total}</span>
-                  <span style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>Auditorías</span>
+                  <span style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase' }}>Analizados</span>
                 </div>
               </div>
 
@@ -181,7 +181,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#ef4444' }}></span>
-                  <span style={{ color: '#f87171' }}>Crítico / Quishing:</span>
+                  <span style={{ color: '#f87171' }}>Peligroso / Fraude:</span>
                   <strong style={{ color: '#fff' }}>{stats.critical_count} ({criticalPct.toFixed(0)}%)</strong>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -209,12 +209,12 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
             alignItems: 'center',
             gap: '8px'
           }}>
-            <BarChart3 size={18} /> Firmas de Amenaza Más Frecuentes
+            <BarChart3 size={18} /> Amenazas Más Comunes Detectadas
           </h4>
 
           {threatFrequencies.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: '0.9rem' }}>
-              No hay suficientes incidentes registrados para generar gráficos de frecuencia.
+              No se han detectado incidentes suficientes para mostrar frecuencias.
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -228,7 +228,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
                         {item.name}
                       </span>
                       <span style={{ color: '#38bdf8', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
-                        {item.frequency} evento{item.frequency > 1 ? 's' : ''}
+                        {item.frequency} detección{item.frequency > 1 ? 'es' : ''}
                       </span>
                     </div>
                     <div style={{
@@ -264,7 +264,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
           gap: '12px'
         }}>
           <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: 0 }}>
-            🗃️ Registro Inmutable de Inspecciones (<code>audit_logs</code>)
+            📋 Historial de Enlaces Analizados
           </h3>
 
           {/* Search Box */}
@@ -272,7 +272,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
             <Search size={16} color="#64748b" style={{ position: 'absolute', left: '12px', top: '12px' }} />
             <input
               type="search"
-              placeholder="Filtrar por URL, dominio o nivel..."
+              placeholder="Buscar por enlace, dominio o resultado..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -288,22 +288,21 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
         {/* Table Content */}
         {logs.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', fontSize: '0.9rem' }}>
-            La bitácora de auditoría no contiene registros coincidentes con el filtro.
+            No hay registros que coincidan con la búsqueda.
           </div>
         ) : (
           <div style={{ overflowX: 'auto', maxHeight: '420px', overflowY: 'auto' }}>
             <table className="soc-table">
               <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
                 <tr>
-                  <th>ID</th>
-                  <th>Fecha / Hora (UTC)</th>
-                  <th>Payload QR Original</th>
-                  <th>URL Final</th>
-                  <th>Saltos</th>
-                  <th>Score</th>
-                  <th>Nivel</th>
-                  <th>Reglas</th>
-                  <th>IP Cliente</th>
+                  <th>#</th>
+                  <th>Fecha y Hora</th>
+                  <th>Enlace o QR Original</th>
+                  <th>Destino Final</th>
+                  <th>Redirecciones</th>
+                  <th>Riesgo</th>
+                  <th>Resultado</th>
+                  <th>Alertas</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,7 +312,7 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
                     <tr key={row.id}>
                       <td style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>#{row.id}</td>
                       <td style={{ fontSize: '0.8rem', whiteSpace: 'nowrap', color: '#94a3b8' }}>
-                        {row.timestamp?.slice(0, 19).replace('T', ' ')}
+                        {row.timestamp?.slice(0, 16).replace('T', ' ')}
                       </td>
                       <td style={{
                         maxWidth: '220px',
@@ -339,19 +338,16 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
                         <strong style={{
                           color: row.risk_score >= 70 ? '#ef4444' : (row.risk_score >= 30 ? '#f59e0b' : '#10b981')
                         }}>
-                          {row.risk_score}
+                          {row.risk_score}/100
                         </strong>
                       </td>
                       <td>
-                        <span className={levelClass} style={{ fontSize: '0.72rem', padding: '2px 6px' }}>
+                        <span className={levelClass} style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
                           {row.risk_level}
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         {Array.isArray(row.detected_flags) ? row.detected_flags.length : 0}
-                      </td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#94a3b8' }}>
-                        {row.client_ip}
                       </td>
                     </tr>
                   );
@@ -364,26 +360,26 @@ export default function ForensicDashboardTab({ refreshTrigger }) {
         {/* Forensic Export Buttons */}
         <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(56, 189, 248, 0.15)' }}>
           <h4 style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '12px', fontWeight: 600 }}>
-            📥 Exportar Bitácora Forense Oficial:
+            📥 Descargar Reporte de Seguridad:
           </h4>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <a
               href="/api/logs/export/csv"
-              download="phishhunter_audit_logs.csv"
+              download="phishhunter_reporte_seguridad.csv"
               className="btn-secondary"
               style={{ textDecoration: 'none', fontSize: '0.85rem' }}
             >
               <FileSpreadsheet size={16} color="#34d399" />
-              Descargar Bitácora Forense en Formato CSV
+              Descargar en Formato Excel / CSV
             </a>
             <a
               href="/api/logs/export/json"
-              download="phishhunter_audit_logs.json"
+              download="phishhunter_reporte_seguridad.json"
               className="btn-secondary"
               style={{ textDecoration: 'none', fontSize: '0.85rem' }}
             >
               <FileText size={16} color="#38bdf8" />
-              Descargar Bitácora Forense en Formato JSON
+              Descargar en Formato JSON
             </a>
           </div>
         </div>

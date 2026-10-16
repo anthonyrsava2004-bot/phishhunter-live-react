@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { 
   Shield, 
-  Activity, 
-  Database, 
-  Clock, 
-  GitBranch, 
-  Terminal, 
-  FileCheck, 
-  Trash2, 
-  AlertTriangle,
+  ShieldCheck,
   CheckCircle2,
-  Server,
-  X
+  Lock,
+  Eye,
+  Trash2,
+  X,
+  Sparkles,
+  ExternalLink
 } from 'lucide-react';
 import { purgeLogs } from '../api';
 
@@ -24,12 +21,12 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
     try {
       setPurging(true);
       const res = await purgeLogs();
-      setPurgeMsg(`Bitácora purgada (${res.purged_count} registros eliminados).`);
+      setPurgeMsg('Historial de análisis limpiado correctamente.');
       setShowConfirm(false);
       if (onPurgeSuccess) onPurgeSuccess();
       setTimeout(() => setPurgeMsg(''), 4000);
     } catch (err) {
-      alert('Error al purgar bitácora: ' + err.message);
+      alert('Error al limpiar el historial: ' + err.message);
     } finally {
       setPurging(false);
     }
@@ -47,7 +44,7 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
       )}
 
       <aside className={`soc-sidebar ${isOpen ? 'soc-sidebar-open' : ''}`}>
-        {/* Brand Header & Mobile Close Button */}
+        {/* Brand Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
@@ -66,15 +63,15 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
             </div>
             <div>
               <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.02em', margin: 0 }}>
-                PhishHunter <span style={{ color: '#38bdf8' }}>SOC</span>
+                PhishHunter
               </h2>
-              <p style={{ fontSize: '0.72rem', color: '#94a3b8', margin: 0, fontWeight: 500 }}>
-                Inspección Anti-Quishing
+              <p style={{ fontSize: '0.74rem', color: '#38bdf8', margin: 0, fontWeight: 600 }}>
+                Seguridad & Anti-Fraude
               </p>
             </div>
           </div>
 
-          {/* Close button - prominently visible on mobile/drawer */}
+          {/* Close button for mobile */}
           <button
             onClick={onClose}
             className="sidebar-close-btn"
@@ -87,26 +84,26 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
 
         {/* Operational Status Pill */}
         <div style={{
-          background: 'rgba(16, 185, 129, 0.1)',
-          border: '1px solid rgba(16, 185, 129, 0.3)',
+          background: 'rgba(16, 185, 129, 0.12)',
+          border: '1px solid rgba(16, 185, 129, 0.35)',
           borderRadius: '8px',
-          padding: '8px 12px',
+          padding: '10px 14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          fontSize: '0.8rem'
+          fontSize: '0.82rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{
-              width: '8px',
-              height: '8px',
+              width: '9px',
+              height: '9px',
               borderRadius: '50%',
               backgroundColor: '#10b981',
-              boxShadow: '0 0 8px #10b981'
+              boxShadow: '0 0 10px #10b981'
             }}></span>
-            <span style={{ color: '#34d399', fontWeight: 600 }}>SOC Activo</span>
+            <span style={{ color: '#34d399', fontWeight: 700 }}>Protección en Tiempo Real</span>
           </div>
-          <span style={{ color: '#64748b', fontSize: '0.72rem', fontFamily: 'var(--font-mono)' }}>v2.4</span>
+          <span style={{ color: '#10b981', fontSize: '0.74rem', fontWeight: 600 }}>Activa</span>
         </div>
 
         {purgeMsg && (
@@ -114,74 +111,68 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
             background: 'rgba(16, 185, 129, 0.15)',
             border: '1px solid #10b981',
             color: '#34d399',
-            padding: '8px 12px',
+            padding: '10px 12px',
             borderRadius: '8px',
-            fontSize: '0.78rem',
+            fontSize: '0.8rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '6px'
+            gap: '8px'
           }}>
             <CheckCircle2 size={16} />
             {purgeMsg}
           </div>
         )}
 
-        {/* Telemetry Block */}
-        <div className="soc-card" style={{ padding: '14px' }}>
+        {/* User Protection Status */}
+        <div className="soc-card" style={{ padding: '16px' }}>
           <h4 style={{
             fontSize: '0.82rem',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
             color: '#38bdf8',
-            marginBottom: '10px',
+            marginBottom: '12px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            fontWeight: 700
           }}>
-            <Activity size={16} /> Telemetría del Sistema
+            <ShieldCheck size={16} /> Cobertura de Seguridad
           </h4>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.8rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
-              <span style={{ color: '#94a3b8' }}>Motor:</span>
-              <span style={{ fontWeight: 600, color: '#f8fafc' }}>Heurístico Multicapa</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#cbd5e1' }}>Escaneo de QR</span>
+              <span style={{ color: '#34d399', fontWeight: 600 }}>Activo</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
-              <span style={{ color: '#94a3b8' }}>Base Forense:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#38bdf8' }}>SQLite Local</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#cbd5e1' }}>Anti-Suplantación Web</span>
+              <span style={{ color: '#34d399', fontWeight: 600 }}>Activo</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
-              <span style={{ color: '#94a3b8' }}>Timeout Red:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', color: '#fbbf24' }}>
-                {telemetry?.http_timeout || '4.0'}s
-              </span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#cbd5e1' }}>Validación SSL/TLS</span>
+              <span style={{ color: '#34d399', fontWeight: 600 }}>Activo</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
-              <span style={{ color: '#94a3b8' }}>Saltos Máximos:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', color: '#38bdf8' }}>
-                {telemetry?.max_redirect_hops || '7'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1' }}>
-              <span style={{ color: '#94a3b8' }}>Agente Crawler:</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: '#94a3b8' }}>PhishHunter</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#cbd5e1' }}>Aislamiento Preventivo</span>
+              <span style={{ color: '#34d399', fontWeight: 600 }}>Activo</span>
             </div>
           </div>
         </div>
 
-        {/* Compliance Block */}
-        <div className="soc-card" style={{ padding: '14px', flex: 1, overflowY: 'auto' }}>
+        {/* Protection Summary */}
+        <div className="soc-card" style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
           <h4 style={{
             fontSize: '0.82rem',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
             color: '#38bdf8',
-            marginBottom: '10px',
+            marginBottom: '12px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            fontWeight: 700
           }}>
-            <FileCheck size={16} /> Alineación Normativa
+            <Sparkles size={16} /> ¿Cómo te protegemos?
           </h4>
 
           <ul style={{
@@ -190,53 +181,49 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
             margin: 0,
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px',
-            fontSize: '0.76rem',
+            gap: '12px',
+            fontSize: '0.8rem',
             color: '#cbd5e1'
           }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#38bdf8' }}>▪</span>
-              <div><strong>ISO/IEC 27001:2022</strong> (A.8.15, A.8.20, A.8.24)</div>
+            <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ color: '#38bdf8', marginTop: '2px' }}>✓</span>
+              <div><strong>Lectura Segura de QR:</strong> Inspeccionamos el enlace antes de que tu dispositivo lo abra.</div>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#38bdf8' }}>▪</span>
-              <div><strong>OWASP ASVS v4.0</strong> (V5.1 / CWE-601 / CWE-79)</div>
+            <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ color: '#38bdf8', marginTop: '2px' }}>✓</span>
+              <div><strong>Detección de Sitios Falsos:</strong> Verificamos si intentan imitar a bancos, redes o tiendas oficiales.</div>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#38bdf8' }}>▪</span>
-              <div><strong>NIST SP 800-52 / 63B</strong></div>
+            <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ color: '#38bdf8', marginTop: '2px' }}>✓</span>
+              <div><strong>Conexión Cifrada:</strong> Alertamos si el sitio no cuenta con certificado de seguridad válido.</div>
             </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#38bdf8' }}>▪</span>
-              <div><strong>CIS Controls v8</strong> (Control 4.1)</div>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#38bdf8' }}>▪</span>
-              <div><strong>MITRE ATT&CK</strong> (T1566.002 / T1583.001)</div>
+            <li style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+              <span style={{ color: '#38bdf8', marginTop: '2px' }}>✓</span>
+              <div><strong>Vista Previa Aislada:</strong> Puedes previsualizar el sitio sin riesgo de descargas maliciosas.</div>
             </li>
           </ul>
         </div>
 
-        {/* Purge Logs Button */}
+        {/* Clear History Button */}
         <div style={{ marginTop: 'auto', paddingTop: '10px' }}>
           {!showConfirm ? (
             <button 
               onClick={() => setShowConfirm(true)}
-              className="btn-danger"
-              style={{ width: '100%', justifyContent: 'center' }}
+              className="btn-secondary"
+              style={{ width: '100%', justifyContent: 'center', fontSize: '0.82rem' }}
             >
-              <Trash2 size={16} /> Purgar Bitácora Forense
+              <Trash2 size={15} /> Limpiar Historial de Análisis
             </button>
           ) : (
             <div style={{
-              background: 'rgba(239, 68, 68, 0.15)',
+              background: 'rgba(239, 68, 68, 0.12)',
               border: '1px solid #ef4444',
               borderRadius: '8px',
               padding: '12px',
               textAlign: 'center'
             }}>
               <p style={{ fontSize: '0.78rem', color: '#fca5a5', marginBottom: '10px' }}>
-                ¿Confirmar purga completa de registros de auditoría?
+                ¿Deseas vaciar el historial de análisis realizados?
               </p>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                 <button 
@@ -253,7 +240,7 @@ export default function Sidebar({ telemetry, onPurgeSuccess, isOpen, onClose }) 
                     cursor: 'pointer'
                   }}
                 >
-                  {purging ? 'Purgando...' : 'Sí, Purgar'}
+                  {purging ? 'Limpiando...' : 'Sí, Limpiar'}
                 </button>
                 <button 
                   onClick={() => setShowConfirm(false)}
