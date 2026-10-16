@@ -281,3 +281,130 @@ input[type="text"]:focus, input[type="search"]:focus, textarea:focus, select:foc
 .soc-table tr:hover td {
   background: rgba(56, 189, 248, 0.04);
 }
+
+/* Sidebar default desktop style */
+.soc-sidebar {
+  width: 300px;
+  min-width: 300px;
+  background: rgba(10, 16, 26, 0.98);
+  border-right: 1px solid rgba(56, 189, 248, 0.15);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 18px;
+  gap: 20px;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.sidebar-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+/* ==============================================================================
+   RESPONSIVE DESIGN (Tablets y Smartphones)
+   ============================================================================== */
+@media (max-width: 1024px) {
+  .soc-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    max-width: 85vw;
+    width: 320px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  .soc-sidebar.soc-sidebar-open {
+    transform: translateX(0);
+    box-shadow: 12px 0 40px rgba(0, 0, 0, 0.85);
+  }
+
+  .sidebar-close-btn {
+    display: flex;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(10, 16, 26, 0.95);
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    padding: 12px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 80;
+    backdrop-filter: blur(8px);
+  }
+
+  .main-workspace {
+    padding: 18px 16px !important;
+  }
+
+  .soc-header {
+    padding: 18px !important;
+  }
+
+  .soc-header h1 {
+    font-size: 1.4rem !important;
+  }
+
+  .soc-header p {
+    font-size: 0.88rem !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-workspace {
+    padding: 14px 10px !important;
+  }
+
+  .soc-card {
+    padding: 14px 12px !important;
+  }
+
+  .soc-header {
+    padding: 14px !important;
+  }
+
+  .soc-header h1 {
+    font-size: 1.25rem !important;
+    gap: 8px !important;
+  }
+}
