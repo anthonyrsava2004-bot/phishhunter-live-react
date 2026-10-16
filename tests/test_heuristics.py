@@ -258,3 +258,47 @@ def test_plain_text_payload_safe(heuristic_engine):
     assert result["risk_score"] == 0
     assert result["risk_level"] == "SEGURO"
     assert len(result["flags_detected"]) == 0
+
+
+def test_subdomain_brand_spoofing(heuristic_engine):
+    """Verifica detección de suplantación de marca oficial en subdominios."""
+    result = heuristic_engine.analyze("https://paypal.com.security-check.com")
+    flags = [f["rule_id"] for f in result["flags_detected"]]
+    assert "TYPOSQUAT-NIST800-63B" in flags
+    assert result["risk_score"] >= 70
+    assert result["risk_level"] == "CRÍTICO / QUISHING"
+
+
+def test_free_hosting_with_lures(heuristic_engine):
+    """Verifica detección de plataformas de hosting gratuito abusadas con señuelos."""
+    result = heuristic_engine.analyze("https://actualiza-tus-datos.vercel.app")
+    flags = [f["rule_id"] for f in result["flags_detected"]]
+    assert "INFRA-FREE-HOSTING-LURE" in flags
+    assert result["risk_score"] >= 60
+    assert result["risk_level"] == "CRÍTICO / QUISHING"
+
+
+def test_unreachable_host_defense(heuristic_engine):
+    """Verifica que servidores caídos, no resueltos o bloqueados no se cataloguen como seguros."""
+    mock_trace = {
+        "final_url": "https://malicious-blocked-site.com",
+        "redirect_count": 0,
+        "unreachable": True,
+        "error_description": "Conexión rechazada o timeout",
+        "ssl_valid": True,
+    }
+    result = heuristic_engine.analyze("https://malicious-blocked-site.com", trace_result=mock_trace)
+    flags = [f["rule_id"] for f in result["flags_detected"]]
+    assert "NET-HOST-UNREACHABLE-SUSPICIOUS" in flags
+    assert result["risk_score"] >= 35
+    assert result["risk_level"] != "SEGURO"
+
+
+def test_surbl_blacklist_detection(heuristic_engine):
+    """Verifica detección activa contra listas de reputación global (SURBL)."""
+    result = heuristic_engine.analyze("http://test.surbl.org")
+    flags = [f["rule_id"] for f in result["flags_detected"]]
+    assert "REPUTATION-BLACKLISTED-THREAT-FEED" in flags
+    assert result["risk_score"] >= 70
+    assert result["risk_level"] == "CRÍTICO / QUISHING"
+

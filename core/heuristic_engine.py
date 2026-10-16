@@ -20,8 +20,13 @@ from utils.threat_signatures import (
     CONFUSABLE_CHARACTERS,
     HIGH_RISK_TLDS,
     PROTECTED_BRAND_NAMES,
+    TARGET_BRAND_KEYWORDS,
+    ABUSED_TUNNEL_DDNS_PROVIDERS,
+    ABUSED_FREE_HOSTING_PLATFORMS,
+    ABUSED_URL_SHORTENERS,
     SUSPICIOUS_PATH_KEYWORDS,
     calculate_similarity_ratio,
+    check_global_reputation_feeds,
     extract_base_domain,
     levenshtein_distance,
 )
@@ -37,7 +42,12 @@ class HeuristicEngine:
         # Mapeo rápido de caracteres confusables para detección homógrafa
         self.confusable_chars = CONFUSABLE_CHARACTERS
 
-    def analyze(self, raw_data: str, trace_result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def analyze(
+        self,
+        raw_data: str,
+        trace_result: Optional[Dict[str, Any]] = None,
+        sandbox_findings: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
         """
         Ejecuta la batería integral de controles heurísticos sobre la URL o dato crudo del QR.
         Retorna la matriz de hallazgos, desglose de penalizaciones y Risk Score final (0-100).
@@ -98,12 +108,31 @@ class HeuristicEngine:
                 }
 
         # Si es una URL web navegable, proceder con la inspección heurística completa
-        target_url = trace_result.get("final_url", classification["url"]) if trace_result else classification["url"]
+        initial_clean_url = classification["url"]
+        target_url = trace_result.get("final_url", initial_clean_url) if trace_result else initial_clean_url
         parsed_target = urlparse(target_url if "://" in target_url else f"http://{target_url}")
-        parsed_initial = urlparse(classification["url"])
+        parsed_initial = urlparse(initial_clean_url)
 
-        target_hostname = parsed_target.hostname or ""
-        initial_hostname = parsed_initial.hostname or ""
+        target_hostname = (parsed_target.hostname or "").lower().strip()
+        initial_hostname = (parsed_initial.hostname or "").lower().strip()
+
+        # =========================================================================
+        # 0. CONTROL: Inteligencia de Amenazas Globales (Google Safe Browsing & SURBL)
+        # =========================================================================
+        reputation = check_global_reputation_feeds(target_hostname, target_url)
+        if not reputation and initial_hostname != target_hostname:
+            reputation = check_global_reputation_feeds(initial_hostname, initial_clean_url)
+
+        if reputation:
+            flags.append({
+                "rule_id": "REPUTATION-BLACKLISTED-THREAT-FEED",
+                "name": f"Bloqueo Activo por {reputation['source']}",
+                "severity": "CRÍTICA",
+                "penalty": 80,
+                "standard": "Google Safe Browsing / SURBL / Spamhaus DBL",
+                "description": reputation["description"],
+                "details": reputation,
+            })
 
         # =========================================================================
         # 1. CONTROL: Detección de Ataques Homógrafos (RFC 5890 / MITRE T1566.002)
@@ -121,36 +150,59 @@ class HeuristicEngine:
             })
 
         # =========================================================================
-        # 2. CONTROL: Detección de Typosquatting (NIST SP 800-63B / MITRE T1583.001)
+        # 2. CONTROL: Detección de Typosquatting e Impersonación de Marca (NIST SP 800-63B)
         # =========================================================================
-        typo_findings = self._detect_typosquatting(target_hostname)
+        typo_findings = self._detect_typosquatting(target_hostname, target_url)
+        if not typo_findings and initial_hostname != target_hostname:
+            typo_findings = self._detect_typosquatting(initial_hostname, initial_clean_url)
+
         if typo_findings:
             flags.append({
                 "rule_id": "TYPOSQUAT-NIST800-63B",
                 "name": "Impersonación de Marca / Typosquatting Confirmado",
                 "severity": "CRÍTICA",
-                "penalty": 40,
+                "penalty": 50,
                 "standard": "NIST SP 800-63B / MITRE ATT&CK T1583.001",
                 "description": typo_findings["description"],
                 "details": typo_findings,
             })
 
         # =========================================================================
-        # 3. CONTROL: Auditoría Criptográfica y Transporte (ISO 27001 A.8.24 / NIST SP 800-52)
+        # 3. CONTROL: Servidor Inaccesible, Caído o Bloqueado por Seguridad
+        # =========================================================================
+        if trace_result and trace_result.get("unreachable", False):
+            err_detail = trace_result.get("error_description", "Servidor no responde o conexión rechazada")
+            flags.append({
+                "rule_id": "NET-HOST-UNREACHABLE-SUSPICIOUS",
+                "name": "Servidor de Destino Inaccesible o Bloqueado",
+                "severity": "ALTA",
+                "penalty": 40,
+                "standard": "CIS Controls v8 4.1 / MITRE ATT&CK T1566",
+                "description": (
+                    f"El servidor de destino no respondió o la conexión fue abortada ({err_detail}). "
+                    f"Comportamiento típico de enlaces fraudulentos bloqueados por proveedores de seguridad, "
+                    f"dominios dados de baja por estafa o servidores que bloquean crawlers de inspección."
+                ),
+            })
+
+        # =========================================================================
+        # 4. CONTROL: Auditoría Criptográfica y Transporte (ISO 27001 A.8.24 / NIST SP 800-52)
         # =========================================================================
         crypto_findings = self._audit_cryptography(parsed_target, trace_result)
         for item in crypto_findings:
             flags.append(item)
 
         # =========================================================================
-        # 4. CONTROL: Inspección Estructural de URL (CIS Controls v8 4.1)
+        # 5. CONTROL: Inspección Estructural y de Infraestructura (CIS Controls v8 4.1)
         # =========================================================================
-        structural_findings = self._inspect_url_structure(parsed_target, target_url)
+        structural_findings = self._inspect_url_structure(
+            parsed_target, target_url, initial_url=initial_clean_url
+        )
         for item in structural_findings:
             flags.append(item)
 
         # =========================================================================
-        # 5. CONTROL: Trazabilidad de Redirecciones Seguras (OWASP ASVS V5.1 / CWE-601)
+        # 6. CONTROL: Trazabilidad de Redirecciones Seguras (OWASP ASVS V5.1 / CWE-601)
         # =========================================================================
         if trace_result:
             redirect_findings = self._inspect_redirect_hops(trace_result, initial_hostname, target_hostname)
@@ -158,19 +210,37 @@ class HeuristicEngine:
                 flags.append(item)
 
         # =========================================================================
-        # Cálculo Ponderado de Risk Score (0 a 100)
+        # 7. CONTROL: Hallazgos Directos del Sandbox Pasivo (si se proporcionan)
+        # =========================================================================
+        if sandbox_findings:
+            for sf in sandbox_findings:
+                flags.append(sf)
+
+        # =========================================================================
+        # Cálculo Ponderado de Risk Score con Regla de Severidad Defensiva Estricta
         # =========================================================================
         total_penalty = sum(f["penalty"] for f in flags)
         risk_score = min(100, max(0, total_penalty))
 
-        if risk_score >= 70:
+        # Regla de Severidad Defensiva Estricta:
+        # 1. Si existe al menos un hallazgo de severidad CRÍTICA -> Mínimo 70 (CRÍTICO)
+        # 2. Si existe al menos un hallazgo de severidad ALTA -> Mínimo 35 (SOSPECHOSO)
+        has_critical = any(f.get("severity") == "CRÍTICA" for f in flags)
+        has_high = any(f.get("severity") == "ALTA" for f in flags)
+
+        if has_critical:
+            risk_score = max(risk_score, 70)
+        elif has_high:
+            risk_score = max(risk_score, 35)
+
+        if risk_score >= 60:
             risk_level = "CRÍTICO / QUISHING"
             risk_badge = "🔴"
             action_recommended = "AISLAMIENTO PREVENTIVO TOTAL: Bloqueo incondicional de hipervínculo y contención en Sandbox."
-        elif risk_score >= 30:
+        elif risk_score >= 20:
             risk_level = "SOSPECHOSO"
             risk_badge = "🟡"
-            action_recommended = "PRECAUCIÓN / MONITOREO: Inspección pasiva obligatoria y verificación manual en Sandbox."
+            action_recommended = "PRECAUCIÓN / ALTO RIESGO: Enlace con anomalías de seguridad activas. No ingresar credenciales."
         else:
             risk_level = "SEGURO"
             risk_badge = "🟢"
@@ -241,9 +311,11 @@ class HeuristicEngine:
 
         return None
 
-    def _detect_typosquatting(self, hostname: str) -> Optional[Dict[str, Any]]:
+    def _detect_typosquatting(self, hostname: str, full_url: str = "") -> Optional[Dict[str, Any]]:
         """
-        Calcula la distancia de Levenshtein contra marcas y dominios oficiales protegidos.
+        Calcula la distancia de Levenshtein contra marcas y dominios oficiales protegidos,
+        e identifica patrones de Combosquatting y falsificación de subdominios.
+        Alineado con NIST SP 800-63B y MITRE ATT&CK T1583.001.
         """
         if not hostname:
             return None
@@ -252,11 +324,37 @@ class HeuristicEngine:
         base_host = extract_base_domain(clean_host)
         host_stem = base_host.split(".")[0]
 
-        # Si el dominio es exactamente uno de los legítimos, no es typosquatting
+        # 1. Si el dominio es exactamente uno de los legítimos protegidos, es oficial
         if clean_host in ALL_PROTECTED_DOMAINS or base_host in ALL_PROTECTED_DOMAINS:
             return None
 
-        # 1. Comparar contra dominios protegidos completos
+        # 2. Detección de Falsificación de Subdominios (Subdomain Brand / Domain Spoofing)
+        # Ejemplos: paypal.com.seguridad-cuenta.com, bcp.com.pe.actualiza-datos.xyz
+        subdomain = clean_host[:-len(base_host)].rstrip(".") if len(clean_host) > len(base_host) else ""
+        if subdomain:
+            for legit_domain in ALL_PROTECTED_DOMAINS:
+                if legit_domain in subdomain:
+                    return {
+                        "matched_target": legit_domain,
+                        "evaluated_domain": clean_host,
+                        "description": (
+                            f"El subdominio '{subdomain}' simula la dirección oficial '{legit_domain}' "
+                            f"para engañar visualmente al usuario mientras el dominio real es '{base_host}'."
+                        ),
+                    }
+            for brand in TARGET_BRAND_KEYWORDS:
+                pattern = r"(^|[.-])" + re.escape(brand) + r"([.-]|$)"
+                if re.search(pattern, subdomain):
+                    return {
+                        "matched_target": brand,
+                        "evaluated_domain": clean_host,
+                        "description": (
+                            f"El subdominio contiene el nombre de marca protegida '{brand}' embebido en '{subdomain}' "
+                            f"bajo el dominio no oficial '{base_host}' (Subdomain Brand Spoofing)."
+                        ),
+                    }
+
+        # 3. Comparar contra dominios protegidos completos (Levenshtein distance 1 o 2)
         for legit_domain in ALL_PROTECTED_DOMAINS:
             dist = levenshtein_distance(base_host, legit_domain)
             ratio = calculate_similarity_ratio(base_host, legit_domain)
@@ -275,9 +373,14 @@ class HeuristicEngine:
                     ),
                 }
 
-        # 2. Detección de Brand Impersonation / Combosquatting (ej: paypal-security.com, login-apple.com)
-        for brand in PROTECTED_BRAND_NAMES:
-            if len(brand) >= 4 and brand in host_stem and host_stem != brand:
+        # 4. Detección de Brand Impersonation / Combosquatting (ej: bcp-seguridad.com, paypal-update.com)
+        all_brands = PROTECTED_BRAND_NAMES.union(TARGET_BRAND_KEYWORDS)
+        for brand in sorted(all_brands, key=lambda x: len(x), reverse=True):
+            if brand in host_stem and host_stem != brand:
+                # Si la marca es corta (<= 3 letras como bcp), verificar que esté delimitada por guión o al inicio/fin
+                if len(brand) <= 3:
+                    if not (host_stem.startswith(brand + "-") or host_stem.endswith("-" + brand) or f"-{brand}-" in host_stem):
+                        continue
                 return {
                     "matched_target": brand,
                     "evaluated_domain": base_host,
@@ -354,12 +457,16 @@ class HeuristicEngine:
 
         return findings
 
-    def _inspect_url_structure(self, parsed_url: Any, full_url: str) -> List[Dict[str, Any]]:
+    def _inspect_url_structure(
+        self, parsed_url: Any, full_url: str, initial_url: str = ""
+    ) -> List[Dict[str, Any]]:
         """
-        Inspección morfológica y estructural según CIS Controls v8 4.1.
+        Inspección morfológica y estructural según CIS Controls v8 4.1 y MITRE ATT&CK.
         """
         findings = []
         hostname = (parsed_url.hostname or "").lower()
+        base_host = extract_base_domain(hostname)
+        host_stem = base_host.split(".")[0]
 
         # 1. Uso directo de dirección IP en lugar de FQDN
         is_ip = False
@@ -382,7 +489,62 @@ class HeuristicEngine:
                 ),
             })
 
-        # 2. TLDs de alto riesgo
+        # 2. Infraestructura abusada: Túneles Efímeros y DNS Dinámico
+        for ddns in ABUSED_TUNNEL_DDNS_PROVIDERS:
+            if hostname == ddns or hostname.endswith("." + ddns):
+                findings.append({
+                    "rule_id": "INFRA-ABUSED-TUNNEL-DDNS",
+                    "name": "Uso de DNS Dinámico o Túnel Efímero de Alto Riesgo",
+                    "severity": "ALTA",
+                    "penalty": 45,
+                    "standard": "MITRE ATT&CK T1583.001 / T1566.002",
+                    "description": (
+                        f"El enlace está alojado en el proveedor de túnel o DNS dinámico '{ddns}'. "
+                        f"Estos servicios son frecuentemente utilizados para Quishing por su carácter desechable y anónimo."
+                    ),
+                })
+                break
+
+        # 3. Infraestructura abusada: Plataformas de Alojamiento Gratuito con Señuelos
+        path_query = (parsed_url.path + "?" + parsed_url.query).lower()
+        full_text_to_check = f"{hostname} {path_query}"
+        matched_lures = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in full_text_to_check]
+
+        for free_host in ABUSED_FREE_HOSTING_PLATFORMS:
+            if hostname == free_host or hostname.endswith("." + free_host):
+                if matched_lures:
+                    findings.append({
+                        "rule_id": "INFRA-FREE-HOSTING-LURE",
+                        "name": "Alojamiento Gratuito con Señuelo de Acceso/Banca",
+                        "severity": "CRÍTICA",
+                        "penalty": 45,
+                        "standard": "MITRE ATT&CK T1566.002",
+                        "description": (
+                            f"El enlace utiliza la plataforma gratuita '{free_host}' combinada con términos de acceso "
+                            f"o banca ({', '.join(matched_lures[:3])}). Patrón típico de kits de phishing prefabricados."
+                        ),
+                    })
+                break
+
+        # 4. Detección de uso de Acortadores de Enlace
+        init_parsed = urlparse(initial_url) if initial_url else parsed_url
+        init_host = (init_parsed.hostname or "").lower()
+        for shortener in ABUSED_URL_SHORTENERS:
+            if init_host == shortener or init_host.endswith("." + shortener):
+                findings.append({
+                    "rule_id": "STRUCT-URL-SHORTENER-MASK",
+                    "name": "Enmascaramiento de Enlace mediante Acortador",
+                    "severity": "MEDIA",
+                    "penalty": 20,
+                    "standard": "OWASP ASVS v4.0 V5.1",
+                    "description": (
+                        f"El enlace original utiliza el acortador '{shortener}' para ocultar el destino real del enlace, "
+                        f"técnica frecuente en Quishing para impedir la inspección visual previa."
+                    ),
+                })
+                break
+
+        # 5. TLDs de alto riesgo
         parts = hostname.split(".")
         if len(parts) >= 2:
             tld = parts[-1].lower()
@@ -399,7 +561,7 @@ class HeuristicEngine:
                     ),
                 })
 
-        # 3. Profundidad excesiva de subdominios (ej. login.security.bank.client.evil.com)
+        # 6. Profundidad excesiva de subdominios (ej. login.security.bank.client.evil.com)
         if len(parts) >= 4 and not is_ip:
             findings.append({
                 "rule_id": "STRUCT-EXCESSIVE-SUBDOMAINS",
@@ -413,7 +575,7 @@ class HeuristicEngine:
                 ),
             })
 
-        # 4. Credenciales incrustadas en URL (user:pass@host)
+        # 7. Credenciales incrustadas en URL (user:pass@host)
         if parsed_url.username or parsed_url.password:
             findings.append({
                 "rule_id": "STRUCT-EMBEDDED-CREDENTIALS",
@@ -427,8 +589,7 @@ class HeuristicEngine:
                 ),
             })
 
-        # 5. Palabras clave de señuelo (lures) en la ruta o query
-        path_query = (parsed_url.path + "?" + parsed_url.query).lower()
+        # 8. Palabras clave de señuelo (lures) en la ruta o query
         matched_keywords = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in path_query]
         if matched_keywords:
             findings.append({
@@ -443,7 +604,22 @@ class HeuristicEngine:
                 ),
             })
 
-        # 6. Ofuscación de caracteres hexadecimales excesivos
+        # 9. Señuelos de Cosecha de Credenciales / Banca en Dominio
+        domain_matched_lures = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in host_stem]
+        if domain_matched_lures:
+            findings.append({
+                "rule_id": "STRUCT-DOMAIN-LURES",
+                "name": "Términos Sospechosos de Seguridad / Banca en Dominio",
+                "severity": "ALTA",
+                "penalty": 25,
+                "standard": "MITRE ATT&CK T1566.002",
+                "description": (
+                    f"El nombre de dominio incluye palabras clave de ingeniería social: "
+                    f"{', '.join(domain_matched_lures[:3])}."
+                ),
+            })
+
+        # 10. Ofuscación de caracteres hexadecimales excesivos
         hex_encoded_count = len(re.findall(r"%[0-9a-fA-F]{2}", full_url))
         if hex_encoded_count >= 5:
             findings.append({

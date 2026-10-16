@@ -531,7 +531,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
       {analysisResult && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Main Verdict Card */}
-          <div className={analysisResult.risk_score >= 70 ? 'quarantine-shield' : (analysisResult.risk_score >= 30 ? 'soc-card' : 'safe-shield')}>
+          <div className={analysisResult.risk_score >= 60 ? 'quarantine-shield' : (analysisResult.risk_score >= 20 ? 'soc-card' : 'safe-shield')}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '100%' }}>
                 <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase' }}>
@@ -539,7 +539,7 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                   <span className={
-                    analysisResult.risk_score >= 70 ? 'badge-critical' : (analysisResult.risk_score >= 30 ? 'badge-suspicious' : 'badge-safe')
+                    analysisResult.risk_score >= 60 ? 'badge-critical' : (analysisResult.risk_score >= 20 ? 'badge-suspicious' : 'badge-safe')
                   } style={{ fontSize: '0.9rem', padding: '6px 12px' }}>
                     {analysisResult.risk_badge} {analysisResult.risk_level} (Riesgo: {analysisResult.risk_score}/100)
                   </span>
@@ -572,13 +572,13 @@ export default function ThreatInspectionTab({ initialPayload, onAnalysisComplete
                 fontSize: '1.5rem',
                 fontWeight: 800,
                 marginTop: '4px',
-                color: analysisResult.risk_score >= 70 ? '#ef4444' : (analysisResult.risk_score >= 30 ? '#f59e0b' : '#10b981'),
+                color: analysisResult.risk_score >= 60 ? '#ef4444' : (analysisResult.risk_score >= 20 ? '#f59e0b' : '#10b981'),
                 wordBreak: 'break-word'
               }}>
                 {analysisResult.risk_score} / 100
               </div>
               <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px', wordBreak: 'break-word' }}>
-                {analysisResult.risk_score >= 70 ? 'Peligro alto' : (analysisResult.risk_score >= 30 ? 'Precaución' : 'Confiable')}
+                {analysisResult.risk_score >= 60 ? 'Peligro alto' : (analysisResult.risk_score >= 20 ? 'Precaución' : 'Confiable')}
               </div>
             </div>
 

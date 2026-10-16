@@ -213,17 +213,25 @@ def analyze_payload(req: AnalyzeRequest, request: Request):
         # 1. Rastrear saltos HTTP y TLS
         trace_result = url_tracer.trace(payload)
 
-        # 2. Análisis heurístico y cálculo de score
-        analysis = heuristic_engine.analyze(payload, trace_result)
+        # 2. Análisis heurístico preliminar
+        prelim_analysis = heuristic_engine.analyze(payload, trace_result)
 
         # 3. Sandbox pasivo
-        is_dangerous = analysis["risk_score"] >= 30
+        is_dangerous = prelim_analysis["risk_score"] >= 20
         sandbox_res = sandbox_preview.fetch_and_isolate(
-            analysis["target_url"],
+            prelim_analysis["target_url"],
             is_dangerous=is_dangerous,
         )
 
-        # 4. Registrar en bitácora SQLite
+        # 4. Integrar hallazgos del DOM si los hay
+        sandbox_threats = sandbox_res.get("dom_threats", [])
+        if sandbox_threats:
+            analysis = heuristic_engine.analyze(payload, trace_result, sandbox_findings=sandbox_threats)
+            is_dangerous = analysis["risk_score"] >= 20
+        else:
+            analysis = prelim_analysis
+
+        # 5. Registrar en bitácora SQLite
         client_ip = request.client.host if request.client else "127.0.0.1"
         log_id = db.insert_audit_log(
             qr_raw_data=payload,

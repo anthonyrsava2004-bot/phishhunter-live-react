@@ -9,7 +9,7 @@ Alineado con:
 
 import html
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup, Comment
 import requests
@@ -126,6 +126,9 @@ class SandboxPreview:
             sanitized_html = self._sanitize_html(soup)
             text_summary = self._extract_clean_text(soup)
 
+            # Inspección defensiva de formularios de captura de credenciales en DOM
+            dom_threats = self._inspect_dom_threats(soup, target_url)
+
             return {
                 "success": True,
                 "url": target_url,
@@ -135,6 +138,7 @@ class SandboxPreview:
                 "metadata": metadata,
                 "sanitized_html": sanitized_html,
                 "text_summary": text_summary,
+                "dom_threats": dom_threats,
                 "page_size_kb": round(len(raw_content) / 1024, 2),
                 "error": None,
             }
@@ -298,6 +302,62 @@ class SandboxPreview:
             },
             "sanitized_html": f"<div style='padding:20px; color:#d9534f;'><strong>Aislamiento Preventivo:</strong> {html.escape(error)}</div>",
             "text_summary": f"No se pudo extraer texto: {error}",
+            "dom_threats": [],
             "page_size_kb": 0.0,
             "error": error,
         }
+
+    def _inspect_dom_threats(self, soup: BeautifulSoup, target_url: str) -> List[Dict[str, Any]]:
+        """
+        Analiza el DOM desinfectado buscando formularios de cosecha de contraseñas
+        y títulos de página fraudulentos en dominios no oficiales.
+        """
+        findings = []
+        parsed = urlparse(target_url)
+        hostname = (parsed.hostname or "").lower()
+
+        from utils.threat_signatures import ALL_PROTECTED_DOMAINS, TARGET_BRAND_KEYWORDS, extract_base_domain
+
+        base_domain = extract_base_domain(hostname)
+        is_official = hostname in ALL_PROTECTED_DOMAINS or base_domain in ALL_PROTECTED_DOMAINS
+
+        if not is_official:
+            # 1. Formularios de captura de contraseñas / PIN
+            pwd_input = soup.find("input", type="password")
+            if not pwd_input:
+                pwd_input = soup.find("input", {"name": re.compile(r"pass|pwd|clave|pin|token|cvv|tarjeta", re.I)})
+
+            if pwd_input:
+                findings.append({
+                    "rule_id": "DOM-CREDENTIAL-HARVESTING-FORM",
+                    "name": "Formulario de Captura de Contraseñas / Tarjetas en Host No Oficial",
+                    "severity": "CRÍTICA",
+                    "penalty": 55,
+                    "standard": "OWASP Top 10 A03 / MITRE ATT&CK T1566.002",
+                    "description": (
+                        "El código HTML de la página contiene campos interactivos de ingreso de contraseña, PIN "
+                        "o credenciales financieras (<input type='password'>) en un dominio no verificado como oficial."
+                    ),
+                })
+
+            # 2. Título de página que simula una entidad financiera o de autenticación
+            title_text = ""
+            if soup.title and soup.title.string:
+                title_text = soup.title.string.lower()
+
+            for brand in TARGET_BRAND_KEYWORDS:
+                if brand in title_text and brand not in base_domain:
+                    findings.append({
+                        "rule_id": "DOM-DECEPTIVE-BRAND-TITLE",
+                        "name": f"Título de Página Suplantando a '{brand.upper()}'",
+                        "severity": "CRÍTICA",
+                        "penalty": 50,
+                        "standard": "MITRE ATT&CK T1566.002",
+                        "description": (
+                            f"El título declarado de la página ('{soup.title.string.strip()[:60]}') simula pertenecer a "
+                            f"la entidad protegida '{brand.upper()}', pero está alojada en el dominio no oficial '{base_domain}'."
+                        ),
+                    })
+                    break
+
+        return findings
